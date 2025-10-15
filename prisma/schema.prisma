@@ -1,0 +1,490 @@
+// This is your Prisma schema file
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DATABASE_DIRECT_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+model Organization {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @db.VarChar(255)
+  slug      String   @unique @db.VarChar(100)
+  domain    String?  @db.VarChar(255)
+
+  // Subscription
+  planTier            String  @default("free") @map("plan_tier") @db.VarChar(50)
+  subscriptionStatus  String  @default("active") @map("subscription_status") @db.VarChar(50)
+  stripeCustomerId    String? @map("stripe_customer_id") @db.VarChar(255)
+  stripeSubscriptionId String? @map("stripe_subscription_id") @db.VarChar(255)
+  billingEmail        String? @map("billing_email") @db.VarChar(255)
+
+  // Storage
+  storageLimitGb  Int    @default(25) @map("storage_limit_gb")
+  storageUsedBytes BigInt @default(0) @map("storage_used_bytes")
+
+  // Settings
+  settings Json @default("{}")
+
+  // Metadata
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  users          User[]
+  goldenThreads  GoldenThread[]
+  connectedItems ConnectedItem[]
+  integrations   Integration[]
+  automations    Automation[]
+  comments       Comment[]
+  activityFeed   ActivityFeed[]
+  webhooks       Webhook[]
+  projects       Project[]
+  apiKeys        ApiKey[]
+
+  @@index([slug])
+  @@index([stripeCustomerId], map: "idx_organizations_stripe_customer")
+  @@map("organizations")
+}
+
+model User {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Auth
+  authProviderId String @unique @map("auth_provider_id") @db.VarChar(255)
+  email          String @db.VarChar(255)
+  fullName       String? @map("full_name") @db.VarChar(255)
+  avatarUrl      String? @map("avatar_url")
+
+  // Permissions
+  role String @default("member") @db.VarChar(50)
+
+  // Storage
+  storageQuotaGb   Int    @default(100) @map("storage_quota_gb")
+  storageUsedBytes BigInt @default(0) @map("storage_used_bytes")
+
+  // Preferences
+  preferences Json @default("{}")
+
+  // Metadata
+  lastActiveAt DateTime? @map("last_active_at") @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  organization         Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdThreads       GoldenThread[]       @relation("ThreadCreator")
+  threadCollaborations ThreadCollaborator[]
+  createdItems         ConnectedItem[]
+  comments             Comment[]
+  activityFeed         ActivityFeed[]
+  notifications        Notification[]
+  connectedIntegrations Integration[]       @relation("IntegrationConnector")
+  createdAutomations   Automation[]
+  createdApiKeys       ApiKey[]
+  addedCollaborators   ThreadCollaborator[] @relation("CollaboratorAdder")
+
+  @@index([organizationId], map: "idx_users_org")
+  @@index([email], map: "idx_users_email")
+  @@index([authProviderId], map: "idx_users_auth_provider")
+  @@map("users")
+}
+
+model GoldenThread {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Core Properties
+  title       String  @db.VarChar(500)
+  description String?
+  status      String  @default("planning") @db.VarChar(50)
+
+  // Organization
+  tags      String[] @default([])
+  projectId String?  @map("project_id") @db.Uuid
+
+  // Access Control
+  visibility String @default("team") @db.VarChar(50)
+  createdBy  String @map("created_by") @db.Uuid
+
+  // Computed Fields
+  connectedItemsCount Int      @default(0) @map("connected_items_count")
+  lastActivityAt      DateTime @default(now()) @map("last_activity_at") @db.Timestamptz(6)
+
+  // AI Features - using Unsupported type for vector
+  embedding Unsupported("vector(1536)")?
+
+  // Metadata
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator        User                 @relation("ThreadCreator", fields: [createdBy], references: [id])
+  project        Project?             @relation(fields: [projectId], references: [id])
+  collaborators  ThreadCollaborator[]
+  connectedItems ConnectedItem[]
+  comments       Comment[]
+  activityFeed   ActivityFeed[]
+
+  @@index([organizationId], map: "idx_threads_org")
+  @@index([status], map: "idx_threads_status")
+  @@index([createdBy], map: "idx_threads_created_by")
+  @@index([lastActivityAt(sort: Desc)], map: "idx_threads_last_activity")
+  @@map("golden_threads")
+}
+
+model ThreadCollaborator {
+  threadId            String   @map("thread_id") @db.Uuid
+  userId              String   @map("user_id") @db.Uuid
+
+  role                String   @default("viewer") @db.VarChar(50)
+  subscribedToUpdates Boolean  @default(true) @map("subscribed_to_updates")
+  lastViewedAt        DateTime? @map("last_viewed_at") @db.Timestamptz(6)
+
+  addedBy             String   @map("added_by") @db.Uuid
+  addedAt             DateTime @default(now()) @map("added_at") @db.Timestamptz(6)
+
+  // Relations
+  thread  GoldenThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  adder   User         @relation("CollaboratorAdder", fields: [addedBy], references: [id])
+
+  @@id([threadId, userId])
+  @@index([userId], map: "idx_collaborators_user")
+  @@index([threadId], map: "idx_collaborators_thread")
+  @@map("thread_collaborators")
+}
+
+model ConnectedItem {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  threadId       String  @map("thread_id") @db.Uuid
+
+  // Integration Source
+  integrationType String  @map("integration_type") @db.VarChar(50)
+  externalId      String  @map("external_id") @db.VarChar(500)
+  externalUrl     String? @map("external_url")
+
+  // Item Data
+  itemType     String? @map("item_type") @db.VarChar(100)
+  title        String? @db.VarChar(1000)
+  description  String?
+  metadata     Json    @default("{}")
+  thumbnailUrl String? @map("thumbnail_url")
+
+  // Status
+  syncStatus   String   @default("synced") @map("sync_status") @db.VarChar(50)
+  lastSyncedAt DateTime @default(now()) @map("last_synced_at") @db.Timestamptz(6)
+
+  // AI Features
+  embedding Unsupported("vector(1536)")?
+
+  // Metadata
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  thread       GoldenThread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  creator      User           @relation(fields: [createdBy], references: [id])
+  comments     Comment[]
+  activityFeed ActivityFeed[]
+
+  @@unique([threadId, integrationType, externalId])
+  @@index([threadId], map: "idx_items_thread")
+  @@index([integrationType], map: "idx_items_integration")
+  @@index([externalId], map: "idx_items_external_id")
+  @@map("connected_items")
+}
+
+model Integration {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Integration Details
+  integrationType String @map("integration_type") @db.VarChar(50)
+
+  // OAuth Tokens (ENCRYPTED)
+  encryptedAccessToken  String?   @map("encrypted_access_token")
+  encryptedRefreshToken String?   @map("encrypted_refresh_token")
+  tokenExpiresAt        DateTime? @map("token_expires_at") @db.Timestamptz(6)
+
+  // Integration Metadata
+  externalUserId      String?  @map("external_user_id") @db.VarChar(255)
+  externalWorkspaceId String?  @map("external_workspace_id") @db.VarChar(255)
+  scopes              String[] @default([])
+  metadata            Json     @default("{}")
+
+  // Status
+  status       String    @default("active") @db.VarChar(50)
+  lastSyncAt   DateTime? @map("last_sync_at") @db.Timestamptz(6)
+  errorMessage String?   @map("error_message")
+
+  // Rate Limiting
+  rateLimitRemaining Int?      @map("rate_limit_remaining")
+  rateLimitResetAt   DateTime? @map("rate_limit_reset_at") @db.Timestamptz(6)
+
+  // Metadata
+  connectedBy String   @map("connected_by") @db.Uuid
+  connectedAt DateTime @default(now()) @map("connected_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connector    User         @relation("IntegrationConnector", fields: [connectedBy], references: [id])
+
+  @@unique([organizationId, integrationType])
+  @@index([organizationId], map: "idx_integrations_org")
+  @@index([integrationType], map: "idx_integrations_type")
+  @@index([status], map: "idx_integrations_status")
+  @@map("integrations")
+}
+
+model Automation {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Automation Definition
+  name        String  @db.VarChar(255)
+  description String?
+  templateId  String? @map("template_id") @db.VarChar(100)
+
+  // Workflow Definition (JSON structure)
+  trigger    Json   @default("{}")
+  conditions Json   @default("[]")
+  actions    Json   @default("[]")
+
+  // Status
+  isActive         Boolean   @default(true) @map("is_active")
+  lastTriggeredAt  DateTime? @map("last_triggered_at") @db.Timestamptz(6)
+  executionCount   Int       @default(0) @map("execution_count")
+  errorCount       Int       @default(0) @map("error_count")
+
+  // Metadata
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  // Relations
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator        User             @relation(fields: [createdBy], references: [id])
+  automationRuns AutomationRun[]
+
+  @@index([organizationId], map: "idx_automations_org")
+  @@index([isActive], map: "idx_automations_active")
+  @@index([templateId], map: "idx_automations_template")
+  @@map("automations")
+}
+
+model AutomationRun {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  automationId String  @map("automation_id") @db.Uuid
+
+  // Execution Details
+  status       String @db.VarChar(50)
+  triggerEvent Json   @map("trigger_event")
+
+  // Results
+  actionsExecuted Json    @default("[]") @map("actions_executed")
+  errorMessage    String? @map("error_message")
+
+  // Timing
+  startedAt   DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  completedAt DateTime? @map("completed_at") @db.Timestamptz(6)
+  durationMs  Int?      @map("duration_ms")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  @@index([automationId], map: "idx_runs_automation")
+  @@index([status], map: "idx_runs_status")
+  @@index([createdAt(sort: Desc)], map: "idx_runs_created_at")
+  @@map("automation_runs")
+}
+
+model Comment {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Comment Target
+  threadId        String  @map("thread_id") @db.Uuid
+  itemId          String? @map("item_id") @db.Uuid
+  parentCommentId String? @map("parent_comment_id") @db.Uuid
+
+  // Content
+  content     String
+  contentHtml String?   @map("content_html")
+  mentions    String[]  @default([]) @db.Uuid
+
+  // Status
+  isEdited  Boolean   @default(false) @map("is_edited")
+  editedAt  DateTime? @map("edited_at") @db.Timestamptz(6)
+  isDeleted Boolean   @default(false) @map("is_deleted")
+
+  // Reactions
+  reactionCounts Json @default("{}") @map("reaction_counts")
+
+  // Metadata
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  organization  Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  thread        GoldenThread    @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  item          ConnectedItem?  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  parentComment Comment?        @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies       Comment[]       @relation("CommentReplies")
+  creator       User            @relation(fields: [createdBy], references: [id])
+  activityFeed  ActivityFeed[]
+
+  @@index([threadId], map: "idx_comments_thread")
+  @@index([itemId], map: "idx_comments_item")
+  @@index([parentCommentId], map: "idx_comments_parent")
+  @@index([createdBy], map: "idx_comments_created_by")
+  @@index([createdAt(sort: Desc)], map: "idx_comments_created_at")
+  @@map("comments")
+}
+
+model ActivityFeed {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Activity Details
+  actorId    String @map("actor_id") @db.Uuid
+  actionType String @map("action_type") @db.VarChar(100)
+
+  // Activity Target
+  threadId  String? @map("thread_id") @db.Uuid
+  itemId    String? @map("item_id") @db.Uuid
+  commentId String? @map("comment_id") @db.Uuid
+
+  // Activity Data
+  metadata Json @default("{}")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actor        User           @relation(fields: [actorId], references: [id])
+  thread       GoldenThread?  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  item         ConnectedItem? @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  comment      Comment?       @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId], map: "idx_activity_org")
+  @@index([threadId], map: "idx_activity_thread")
+  @@index([createdAt(sort: Desc)], map: "idx_activity_created_at")
+  @@map("activity_feed")
+}
+
+model Webhook {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Webhook Details
+  integrationType String @map("integration_type") @db.VarChar(50)
+  eventType       String @map("event_type") @db.VarChar(100)
+
+  // Payload
+  payload   Json    @default("{}")
+  signature String? @db.VarChar(500)
+
+  // Processing Status
+  status       String    @default("pending") @db.VarChar(50)
+  processedAt  DateTime? @map("processed_at") @db.Timestamptz(6)
+  errorMessage String?   @map("error_message")
+  retryCount   Int       @default(0) @map("retry_count")
+
+  receivedAt DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([status], map: "idx_webhooks_status")
+  @@index([integrationType], map: "idx_webhooks_integration")
+  @@index([receivedAt(sort: Desc)], map: "idx_webhooks_received_at")
+  @@map("webhooks")
+}
+
+model Project {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  name        String  @db.VarChar(255)
+  description String?
+  color       String? @db.VarChar(7)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  threads      GoldenThread[]
+
+  @@map("projects")
+}
+
+model Notification {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  notificationType String  @map("notification_type") @db.VarChar(100)
+  title            String  @db.VarChar(500)
+  message          String?
+  linkUrl          String? @map("link_url")
+
+  isRead Boolean   @default(false) @map("is_read")
+  readAt DateTime? @map("read_at") @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_notifications_user")
+  @@index([userId, isRead], map: "idx_notifications_unread")
+  @@index([createdAt(sort: Desc)], map: "idx_notifications_created_at")
+  @@map("notifications")
+}
+
+model ApiKey {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  name      String   @db.VarChar(255)
+  keyPrefix String   @map("key_prefix") @db.VarChar(10)
+  keyHash   String   @map("key_hash") @db.VarChar(255)
+
+  scopes       String[]  @default([])
+  lastUsedAt   DateTime? @map("last_used_at") @db.Timestamptz(6)
+
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  expiresAt DateTime? @map("expires_at") @db.Timestamptz(6)
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  creator      User         @relation(fields: [createdBy], references: [id])
+
+  @@index([organizationId], map: "idx_api_keys_org")
+  @@index([keyPrefix], map: "idx_api_keys_prefix")
+  @@map("api_keys")
+}
