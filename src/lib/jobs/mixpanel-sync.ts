@@ -121,47 +121,18 @@ export const mixpanelSync = inngest.createFunction(
               const embedding = await generateEmbedding(embeddingText);
 
               // Create connected item
-              // Note: Mixpanel insights are org-wide, not thread-specific
-              // They will appear in semantic search results and can be manually added to threads
-              const item = await prisma.connectedItem.create({
-                data: {
-                  organizationId: integration.organizationId,
-                  integrationType: 'mixpanel',
-                  externalId: `${insight.type}-${insight.name}`,
-                  externalUrl: insight.url,
-                  title: `${insight.name}`,
-                  description,
-                  itemType: insight.type,
-                  threadId: null, // Org-wide insights, not thread-specific
-                  createdBy: null, // System-generated
-                  metadata: {
-                    type: insight.type,
-                    value: insight.value,
-                    change: insight.change,
-                    dateRange: {
-                      from: formatDate(fromDate),
-                      to: formatDate(toDate),
-                    },
-                  },
-                },
-              });
-
-              // Store embedding
-              if (embedding) {
-                await prisma.$executeRawUnsafe(`
-                  UPDATE connected_items
-                  SET embedding = '[${embedding.join(',')}]'::vector
-                  WHERE id = '${item.id}'
-                `);
-              }
-
-              logger.info('Mixpanel insight item created', {
-                itemId: item.id,
+              // Note: Mixpanel insights are created without a thread association
+              // They can be manually added to threads via semantic search
+              // For now, skip creating items - they should be created when manually added to threads
+              // TODO: Create a separate "insights" table for org-wide analytics
+              logger.info('Mixpanel insight detected (not creating item yet)', {
                 insightType: insight.type,
                 insightName: insight.name,
+                value: insight.value,
               });
 
-              results.insights++;
+              results.insights++; // Count detected insights
+              continue; // Skip item creation for now
             }
 
             // Update lastSyncAt timestamp
