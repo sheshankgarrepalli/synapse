@@ -61,7 +61,7 @@ export const mixpanelSync = inngest.createFunction(
             });
 
             // Create Mixpanel service
-            const credentials = integration.credentials as Record<string, any>;
+            const credentials = (integration as any).credentials as Record<string, any>;
             const mixpanel = await createMixpanelService(credentials);
 
             // Get date range (last 7 days)
