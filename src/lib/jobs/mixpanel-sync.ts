@@ -121,6 +121,8 @@ export const mixpanelSync = inngest.createFunction(
               const embedding = await generateEmbedding(embeddingText);
 
               // Create connected item
+              // Note: Mixpanel insights are org-wide, not thread-specific
+              // They will appear in semantic search results and can be manually added to threads
               const item = await prisma.connectedItem.create({
                 data: {
                   organizationId: integration.organizationId,
@@ -130,6 +132,8 @@ export const mixpanelSync = inngest.createFunction(
                   title: `${insight.name}`,
                   description,
                   itemType: insight.type,
+                  threadId: null, // Org-wide insights, not thread-specific
+                  createdBy: null, // System-generated
                   metadata: {
                     type: insight.type,
                     value: insight.value,
