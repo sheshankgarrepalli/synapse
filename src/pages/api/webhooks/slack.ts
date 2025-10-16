@@ -136,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Handle URL verification challenge (required for Slack app setup)
     if (payload.type === 'url_verification') {
       logger.info('Slack URL verification challenge received');
-      return res.status(200).json({ challenge: payload.challenge });
+      return res.status(200).json({ challenge: (payload as SlackUrlVerification).challenge });
     }
 
     // Verify webhook signature for all non-verification events
