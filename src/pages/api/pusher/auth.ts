@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getAuth } from '@clerk/nextjs/server';
-import { pusher } from '@/lib/pusher';
+import { getPusher } from '@/lib/pusher';
 import { prisma } from '@/lib/prisma';
 
 /**
@@ -50,7 +50,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Authorize private channel
-      const authResponse = pusher.authorizeChannel(socket_id, channel_name);
+      const authResponse = getPusher().authorizeChannel(socket_id, channel_name);
       return res.json(authResponse);
     }
 
@@ -71,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Authorize presence channel with user info
-      const authResponse = pusher.authorizeChannel(socket_id, channel_name, {
+      const authResponse = getPusher().authorizeChannel(socket_id, channel_name, {
         user_id: user.id,
         user_info: {
           id: user.id,

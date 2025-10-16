@@ -9,7 +9,7 @@ import { logger } from './logger';
 // Lazy initialization to avoid build-time errors
 let pusherInstance: Pusher | null = null;
 
-function getPusher(): Pusher {
+export function getPusher(): Pusher {
   if (!pusherInstance) {
     // Check if all required env vars are present
     if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_KEY || !process.env.PUSHER_SECRET || !process.env.PUSHER_CLUSTER) {
@@ -17,6 +17,7 @@ function getPusher(): Pusher {
       // Return a mock instance for build time/missing config
       pusherInstance = {
         trigger: async () => ({ channels: {} }),
+        authorizeChannel: () => ({ auth: '' }),
       } as unknown as Pusher;
       return pusherInstance;
     }
