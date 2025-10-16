@@ -183,15 +183,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       switch (eventType) {
         case 'message':
-          await handleMessageEvent(payload as SlackMessageEvent, integration.organizationId);
+          await handleMessageEvent(payload as SlackMessageEvent, integration);
           break;
 
         case 'reaction_added':
-          await handleReactionEvent(payload as SlackReactionEvent, integration.organizationId);
+          await handleReactionEvent(payload as SlackReactionEvent, integration);
           break;
 
         case 'file_shared':
-          await handleFileEvent(payload as SlackFileEvent, integration.organizationId);
+          await handleFileEvent(payload as SlackFileEvent, integration);
           break;
 
         default:
@@ -220,7 +220,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function handleMessageEvent(payload: SlackMessageEvent, organizationId: string) {
+async function handleMessageEvent(payload: SlackMessageEvent, integration: any) {
   const { event } = payload;
 
   // Skip bot messages and message edits/deletions
@@ -257,12 +257,14 @@ async function handleMessageEvent(payload: SlackMessageEvent, organizationId: st
   // Create connected item for the message
   const item = await prisma.connectedItem.create({
     data: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'slack',
       externalId: `${channelId}:${event.ts}`,
       externalUrl: slackUrl,
       title: `Message in #${event.channel}`,
       description: event.text,
+      threadId: '', // Will be set by AI relationship detection
+      createdBy: integration.connectedBy, // Use the integration creator as fallback
       metadata: {
         team_id: teamId,
         channel: event.channel,
@@ -290,7 +292,7 @@ async function handleMessageEvent(payload: SlackMessageEvent, organizationId: st
   });
 }
 
-async function handleReactionEvent(payload: SlackReactionEvent, organizationId: string) {
+async function handleReactionEvent(payload: SlackReactionEvent, integration: any) {
   const { event } = payload;
 
   logger.info('Processing Slack reaction', {
@@ -316,12 +318,14 @@ async function handleReactionEvent(payload: SlackReactionEvent, organizationId: 
   // Create connected item for the reaction
   const item = await prisma.connectedItem.create({
     data: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'slack',
       externalId: `${event.item.channel}:${event.item.ts}:reaction:${event.reaction}`,
       externalUrl: slackUrl,
       title: `Reaction :${event.reaction}:`,
       description: `User reacted with :${event.reaction}: to a message in #${event.item.channel}`,
+      threadId: '', // Will be set by AI relationship detection
+      createdBy: integration.connectedBy, // Use the integration creator as fallback
       metadata: {
         team_id: teamId,
         channel: event.item.channel,
@@ -349,7 +353,7 @@ async function handleReactionEvent(payload: SlackReactionEvent, organizationId: 
   });
 }
 
-async function handleFileEvent(payload: SlackFileEvent, organizationId: string) {
+async function handleFileEvent(payload: SlackFileEvent, integration: any) {
   const { event } = payload;
 
   logger.info('Processing Slack file', {
@@ -368,12 +372,14 @@ async function handleFileEvent(payload: SlackFileEvent, organizationId: string) 
   // Create connected item for the file
   const item = await prisma.connectedItem.create({
     data: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'slack',
       externalId: event.file_id,
       externalUrl: event.file.permalink,
       title: event.file.title || event.file.name,
       description: `Shared file: ${event.file.name} (${event.file.mimetype})`,
+      threadId: '', // Will be set by AI relationship detection
+      createdBy: integration.connectedBy, // Use the integration creator as fallback
       metadata: {
         team_id: payload.team_id,
         file_id: event.file_id,

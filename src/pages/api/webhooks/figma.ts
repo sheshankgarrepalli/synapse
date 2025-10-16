@@ -77,19 +77,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Handle different event types
     switch (payload.event_type) {
       case 'FILE_COMMENT':
-        await handleFileComment(payload, integration.organizationId);
+        await handleFileComment(payload, integration);
         break;
 
       case 'FILE_UPDATE':
-        await handleFileUpdate(payload, integration.organizationId);
+        await handleFileUpdate(payload, integration);
         break;
 
       case 'FILE_VERSION_UPDATE':
-        await handleFileVersionUpdate(payload, integration.organizationId);
+        await handleFileVersionUpdate(payload, integration);
         break;
 
       case 'LIBRARY_PUBLISH':
-        await handleLibraryPublish(payload, integration.organizationId);
+        await handleLibraryPublish(payload, integration);
         break;
 
       default:
@@ -118,7 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function handleFileComment(payload: FigmaWebhookPayload, organizationId: string) {
+async function handleFileComment(payload: FigmaWebhookPayload, integration: any) {
   if (!payload.comment) return;
 
   const { comment, file_key, file_name } = payload;
@@ -134,12 +134,14 @@ async function handleFileComment(payload: FigmaWebhookPayload, organizationId: s
   // Create connected item for the comment
   const item = await prisma.connectedItem.create({
     data: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'figma',
       externalId: comment.id,
       externalUrl: `https://www.figma.com/file/${file_key}?node-id=${comment.client_meta.node_id}#${comment.id}`,
       title: `Comment in ${file_name}`,
       description: comment.message,
+      threadId: '', // Will be set by AI relationship detection
+      createdBy: integration.connectedBy, // Use the integration creator as fallback
       metadata: {
         file_key,
         file_name,
@@ -167,7 +169,7 @@ async function handleFileComment(payload: FigmaWebhookPayload, organizationId: s
   });
 }
 
-async function handleFileUpdate(payload: FigmaWebhookPayload, organizationId: string) {
+async function handleFileUpdate(payload: FigmaWebhookPayload, integration: any) {
   logger.info('Figma file updated', {
     file_key: payload.file_key,
     file_name: payload.file_name,
@@ -177,7 +179,7 @@ async function handleFileUpdate(payload: FigmaWebhookPayload, organizationId: st
   // or create a new item for the update event
 }
 
-async function handleFileVersionUpdate(payload: FigmaWebhookPayload, organizationId: string) {
+async function handleFileVersionUpdate(payload: FigmaWebhookPayload, integration: any) {
   logger.info('Figma file version updated', {
     file_key: payload.file_key,
     file_name: payload.file_name,
@@ -185,7 +187,7 @@ async function handleFileVersionUpdate(payload: FigmaWebhookPayload, organizatio
   });
 }
 
-async function handleLibraryPublish(payload: FigmaWebhookPayload, organizationId: string) {
+async function handleLibraryPublish(payload: FigmaWebhookPayload, integration: any) {
   logger.info('Figma library published', {
     file_key: payload.file_key,
     file_name: payload.file_name,

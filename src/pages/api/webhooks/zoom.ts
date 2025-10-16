@@ -95,19 +95,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Handle different event types
     switch (payload.event) {
       case 'meeting.started':
-        await handleMeetingStarted(payload, integration.organizationId);
+        await handleMeetingStarted(payload, integration);
         break;
 
       case 'meeting.ended':
-        await handleMeetingEnded(payload, integration.organizationId);
+        await handleMeetingEnded(payload, integration);
         break;
 
       case 'recording.completed':
-        await handleRecordingCompleted(payload, integration.organizationId);
+        await handleRecordingCompleted(payload, integration);
         break;
 
       case 'recording.transcript_completed':
-        await handleTranscriptCompleted(payload, integration.organizationId);
+        await handleTranscriptCompleted(payload, integration);
         break;
 
       default:
@@ -171,7 +171,7 @@ function verifyZoomSignature(
 
 async function handleMeetingStarted(
   payload: ZoomWebhookPayload,
-  organizationId: string
+  integration: any
 ) {
   const { object } = payload.payload;
 
@@ -186,7 +186,7 @@ async function handleMeetingStarted(
 
 async function handleMeetingEnded(
   payload: ZoomWebhookPayload,
-  organizationId: string
+  integration: any
 ) {
   const { object } = payload.payload;
 
@@ -206,12 +206,14 @@ async function handleMeetingEnded(
 
   const item = await prisma.connectedItem.create({
     data: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'zoom',
       externalId: String(object.id),
       externalUrl: `https://zoom.us/recording/${object.uuid}`,
       title: object.topic || 'Zoom Meeting',
       description: `Meeting ended. Duration: ${object.duration} minutes`,
+      threadId: '', // Will be set by AI relationship detection
+      createdBy: integration.connectedBy, // Use the integration creator as fallback
       metadata: {
         meeting_id: object.id,
         uuid: object.uuid,
@@ -240,7 +242,7 @@ async function handleMeetingEnded(
 
 async function handleRecordingCompleted(
   payload: ZoomWebhookPayload,
-  organizationId: string
+  integration: any
 ) {
   const { object } = payload.payload;
 
@@ -262,13 +264,15 @@ async function handleRecordingCompleted(
     // Create connected item for the recording
     const item = await prisma.connectedItem.create({
       data: {
-        organizationId,
+        organizationId: integration.organizationId,
         integrationType: 'zoom',
         externalId: recording.id,
         externalUrl: recording.play_url,
         title: `${object.topic} - Recording`,
         description: `${recording.recording_type} recording (${formatFileSize(recording.file_size)})`,
         itemType: 'recording',
+        threadId: '', // Will be set by AI relationship detection
+        createdBy: integration.connectedBy, // Use the integration creator as fallback
         metadata: {
           meeting_id: object.id,
           meeting_uuid: object.uuid,
@@ -303,7 +307,7 @@ async function handleRecordingCompleted(
 
 async function handleTranscriptCompleted(
   payload: ZoomWebhookPayload,
-  organizationId: string
+  integration: any
 ) {
   const { object } = payload.payload;
 
@@ -326,13 +330,15 @@ async function handleTranscriptCompleted(
 
     const item = await prisma.connectedItem.create({
       data: {
-        organizationId,
+        organizationId: integration.organizationId,
         integrationType: 'zoom',
         externalId: transcript.id,
         externalUrl: transcript.download_url,
         title: `${object.topic} - Transcript`,
         description: `Meeting transcript (${formatFileSize(transcript.file_size)})`,
         itemType: 'transcript',
+        threadId: '', // Will be set by AI relationship detection
+        createdBy: integration.connectedBy, // Use the integration creator as fallback
         metadata: {
           meeting_id: object.id,
           meeting_uuid: object.uuid,

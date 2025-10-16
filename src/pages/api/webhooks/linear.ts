@@ -117,19 +117,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     switch (payload.type) {
       case 'Issue':
         if (payload.action === 'create' || payload.action === 'update') {
-          await handleIssueEvent(payload, integration.organizationId);
+          await handleIssueEvent(payload, integration);
         }
         break;
 
       case 'Comment':
         if (payload.action === 'create') {
-          await handleCommentEvent(payload, integration.organizationId);
+          await handleCommentEvent(payload, integration);
         }
         break;
 
       case 'Project':
         if (payload.action === 'create' || payload.action === 'update') {
-          await handleProjectEvent(payload, integration.organizationId);
+          await handleProjectEvent(payload, integration);
         }
         break;
 
@@ -159,7 +159,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function handleIssueEvent(payload: LinearWebhookPayload, organizationId: string) {
+async function handleIssueEvent(payload: LinearWebhookPayload, integration: any) {
   const { data, action } = payload;
 
   if (!data.id) {
@@ -193,7 +193,7 @@ async function handleIssueEvent(payload: LinearWebhookPayload, organizationId: s
   // Check if item already exists
   const existingItem = await prisma.connectedItem.findFirst({
     where: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'linear',
       externalId: data.id,
     },
@@ -238,13 +238,15 @@ async function handleIssueEvent(payload: LinearWebhookPayload, organizationId: s
     // Create new item
     const newItem = await prisma.connectedItem.create({
       data: {
-        organizationId,
+        organizationId: integration.organizationId,
         integrationType: 'linear',
         externalId: data.id,
         externalUrl: issueUrl,
         itemType: 'issue',
         title: issueTitle,
         description: issueDescription,
+        threadId: '', // Will be set by AI relationship detection
+        createdBy: integration.connectedBy, // Use the integration creator as fallback
         metadata: {
           identifier: issueIdentifier,
           number: issueNumber,
@@ -274,7 +276,7 @@ async function handleIssueEvent(payload: LinearWebhookPayload, organizationId: s
   }
 }
 
-async function handleCommentEvent(payload: LinearWebhookPayload, organizationId: string) {
+async function handleCommentEvent(payload: LinearWebhookPayload, integration: any) {
   const { data } = payload;
 
   if (!data.id || !data.body) {
@@ -304,13 +306,15 @@ async function handleCommentEvent(payload: LinearWebhookPayload, organizationId:
   // Create connected item for the comment
   const item = await prisma.connectedItem.create({
     data: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'linear',
       externalId: data.id,
       externalUrl: data.issue?.url || '',
       itemType: 'comment',
       title: `Comment on ${issueIdentifier}`,
       description: commentBody,
+      threadId: '', // Will be set by AI relationship detection
+      createdBy: integration.connectedBy, // Use the integration creator as fallback
       metadata: {
         comment_id: data.id,
         issue_id: data.issue?.id,
@@ -338,7 +342,7 @@ async function handleCommentEvent(payload: LinearWebhookPayload, organizationId:
   });
 }
 
-async function handleProjectEvent(payload: LinearWebhookPayload, organizationId: string) {
+async function handleProjectEvent(payload: LinearWebhookPayload, integration: any) {
   const { data, action } = payload;
 
   if (!data.id || !data.name) {
@@ -367,7 +371,7 @@ async function handleProjectEvent(payload: LinearWebhookPayload, organizationId:
   // Check if item already exists
   const existingItem = await prisma.connectedItem.findFirst({
     where: {
-      organizationId,
+      organizationId: integration.organizationId,
       integrationType: 'linear',
       externalId: data.id,
     },
@@ -406,13 +410,15 @@ async function handleProjectEvent(payload: LinearWebhookPayload, organizationId:
     // Create new item
     const newItem = await prisma.connectedItem.create({
       data: {
-        organizationId,
+        organizationId: integration.organizationId,
         integrationType: 'linear',
         externalId: data.id,
         externalUrl: projectUrl,
         itemType: 'project',
         title: projectName,
         description: projectDescription,
+        threadId: '', // Will be set by AI relationship detection
+        createdBy: integration.connectedBy, // Use the integration creator as fallback
         metadata: {
           project_id: data.id,
           project_name: projectName,
