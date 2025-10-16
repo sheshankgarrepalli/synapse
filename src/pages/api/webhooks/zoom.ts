@@ -118,6 +118,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await prisma.activityFeed.create({
       data: {
         organizationId: integration.organizationId,
+        actorId: integration.connectedBy,
         actionType: 'integration_event',
         metadata: {
           integration: 'zoom',
