@@ -17,6 +17,7 @@ interface LinearWebhookPayload {
   createdAt: string;
   data: {
     id: string;
+    name?: string; // For Project events
     title?: string;
     description?: string;
     state?: {
