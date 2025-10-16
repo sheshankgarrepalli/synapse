@@ -103,7 +103,7 @@ export const notionSync = inngest.createFunction(
           logger.info('Syncing Notion pages', {
             integrationId: integration.id,
             organizationId: integration.organizationId,
-            lastSyncAt: lastSyncAt.toISOString(),
+            lastSyncAt: lastSyncAt instanceof Date ? lastSyncAt.toISOString() : lastSyncAt,
           });
 
           // Search for all pages (Notion API doesn't support filtering by last_edited_time in search)
