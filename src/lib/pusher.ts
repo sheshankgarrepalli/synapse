@@ -6,14 +6,32 @@
 import Pusher from 'pusher';
 import { logger } from './logger';
 
-// Initialize Pusher client
-export const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.PUSHER_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  cluster: process.env.PUSHER_CLUSTER!,
-  useTLS: true,
-});
+// Lazy initialization to avoid build-time errors
+let pusherInstance: Pusher | null = null;
+
+function getPusher(): Pusher {
+  if (!pusherInstance) {
+    // Check if all required env vars are present
+    if (!process.env.PUSHER_APP_ID || !process.env.PUSHER_KEY || !process.env.PUSHER_SECRET || !process.env.PUSHER_CLUSTER) {
+      logger.warn('Pusher environment variables not configured, real-time features will be disabled');
+      // Return a mock instance for build time/missing config
+      pusherInstance = {
+        trigger: async () => ({ channels: {} }),
+      } as unknown as Pusher;
+      return pusherInstance;
+    }
+
+    pusherInstance = new Pusher({
+      appId: process.env.PUSHER_APP_ID,
+      key: process.env.PUSHER_KEY,
+      secret: process.env.PUSHER_SECRET,
+      cluster: process.env.PUSHER_CLUSTER,
+      useTLS: true,
+    });
+  }
+
+  return pusherInstance;
+}
 
 /**
  * Broadcast thread update to all viewers
@@ -24,7 +42,7 @@ export async function broadcastThreadUpdate(
   data: any
 ) {
   try {
-    await pusher.trigger(`private-org-${organizationId}`, 'thread:updated', {
+    await getPusher().trigger(`private-org-${organizationId}`, 'thread:updated', {
       threadId,
       timestamp: new Date().toISOString(),
       ...data,
@@ -45,7 +63,7 @@ export async function broadcastCommentCreated(
   comment: any
 ) {
   try {
-    await pusher.trigger(`private-org-${organizationId}`, 'comment:created', {
+    await getPusher().trigger(`private-org-${organizationId}`, 'comment:created', {
       threadId,
       comment,
       timestamp: new Date().toISOString(),
@@ -66,7 +84,7 @@ export async function broadcastItemAdded(
   item: any
 ) {
   try {
-    await pusher.trigger(`private-org-${organizationId}`, 'item:added', {
+    await getPusher().trigger(`private-org-${organizationId}`, 'item:added', {
       threadId,
       item,
       timestamp: new Date().toISOString(),
@@ -86,7 +104,7 @@ export async function broadcastActivity(
   activity: any
 ) {
   try {
-    await pusher.trigger(`private-org-${organizationId}`, 'activity:new', {
+    await getPusher().trigger(`private-org-${organizationId}`, 'activity:new', {
       activity,
       timestamp: new Date().toISOString(),
     });
@@ -107,7 +125,7 @@ export async function broadcastThreadStatusChange(
   newStatus: string
 ) {
   try {
-    await pusher.trigger(`private-org-${organizationId}`, 'thread:status_changed', {
+    await getPusher().trigger(`private-org-${organizationId}`, 'thread:status_changed', {
       threadId,
       oldStatus,
       newStatus,
