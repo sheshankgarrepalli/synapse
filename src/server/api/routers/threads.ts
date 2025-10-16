@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, orgProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { invalidateThreadCache } from '@/lib/cache';
+import { generateEmbedding, prepareTextForEmbedding } from '@/lib/ai/embeddings';
+import { findRelatedContent } from '@/lib/ai/semantic-search';
+import { logger } from '@/lib/logger';
 
 export const threadsRouter = createTRPCRouter({
   /**
@@ -125,6 +128,13 @@ export const threadsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Generate embedding for semantic search
+      const embeddingText = prepareTextForEmbedding({
+        title: input.title,
+        description: input.description,
+      });
+      const embedding = await generateEmbedding(embeddingText);
+
       // Create thread
       const thread = await ctx.prisma.goldenThread.create({
         data: {
@@ -137,6 +147,15 @@ export const threadsRouter = createTRPCRouter({
           projectId: input.projectId,
         },
       });
+
+      // Store embedding separately using raw query (since Prisma doesn't support vector type)
+      if (embedding) {
+        await ctx.prisma.$executeRawUnsafe(`
+          UPDATE golden_threads
+          SET embedding = '[${embedding.join(',')}]'::vector
+          WHERE id = '${thread.id}'
+        `);
+      }
 
       // Add creator as owner collaborator
       await ctx.prisma.threadCollaborator.create({
@@ -208,6 +227,21 @@ export const threadsRouter = createTRPCRouter({
         });
       }
 
+      // Regenerate embedding if title or description changed
+      let embedding: number[] | null | undefined;
+      if (input.title || input.description) {
+        const currentThread = await ctx.prisma.goldenThread.findUnique({
+          where: { id: input.id },
+          select: { title: true, description: true },
+        });
+
+        const embeddingText = prepareTextForEmbedding({
+          title: input.title ?? currentThread?.title,
+          description: input.description ?? currentThread?.description,
+        });
+        embedding = await generateEmbedding(embeddingText);
+      }
+
       const thread = await ctx.prisma.goldenThread.update({
         where: { id: input.id },
         data: {
@@ -218,6 +252,15 @@ export const threadsRouter = createTRPCRouter({
           updatedAt: new Date(),
         },
       });
+
+      // Update embedding separately using raw query (since Prisma doesn't support vector type)
+      if (embedding) {
+        await ctx.prisma.$executeRawUnsafe(`
+          UPDATE golden_threads
+          SET embedding = '[${embedding.join(',')}]'::vector
+          WHERE id = '${input.id}'
+        `);
+      }
 
       // Invalidate cache
       await invalidateThreadCache(input.id);
@@ -400,5 +443,55 @@ export const threadsRouter = createTRPCRouter({
       }
 
       return { activities, nextCursor };
+    }),
+
+  /**
+   * Get related threads and items using AI semantic similarity
+   * Powers "Related Threads" and "You might also like" features
+   */
+  getRelated: orgProcedure
+    .input(
+      z.object({
+        threadId: z.string().uuid(),
+        limit: z.number().min(1).max(20).default(10),
+        threshold: z.number().min(0).max(1).default(0.3), // Similarity threshold
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // Verify thread exists and user has access
+      const thread = await ctx.prisma.goldenThread.findFirst({
+        where: {
+          id: input.threadId,
+          organizationId: ctx.session.organizationId,
+          deletedAt: null,
+        },
+      });
+
+      if (!thread) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Thread not found',
+        });
+      }
+
+      // Find related content using AI semantic search
+      const related = await findRelatedContent(
+        input.threadId,
+        ctx.session.organizationId,
+        {
+          limit: input.limit,
+          threshold: input.threshold,
+        }
+      );
+
+      return {
+        relatedThreads: related.relatedThreads,
+        relatedItems: related.relatedItems,
+        metadata: {
+          threshold: input.threshold,
+          resultsCount:
+            related.relatedThreads.length + related.relatedItems.length,
+        },
+      };
     }),
 });

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useOrganization } from '@clerk/nextjs';
 import { Layout } from '@/components/Layout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -10,12 +11,17 @@ import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
 import { api } from '@/utils/api';
 import { formatRelativeTime, getStatusColor } from '@/lib/utils';
+import { useRealtimeThread } from '@/hooks/use-realtime-thread';
+import { usePresence } from '@/hooks/use-presence';
+import { useRealtimeComments } from '@/hooks/use-realtime-comments';
+import { useRealtimeActivity } from '@/hooks/use-realtime-activity';
 import {
   PencilIcon,
   TrashIcon,
   PlusIcon,
   LinkIcon,
   ChatBubbleLeftIcon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const statusOptions: SelectOption[] = [
@@ -29,9 +35,12 @@ const statusOptions: SelectOption[] = [
 export default function ThreadDetailPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { organization } = useOrganization();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
+  const [localThread, setLocalThread] = useState<any>(null);
+  const [localComments, setLocalComments] = useState<any[]>([]);
 
   const { data: thread, isLoading } = api.threads.getById.useQuery(
     { id: id as string },
@@ -53,12 +62,85 @@ export default function ThreadDetailPage() {
     { enabled: !!id }
   );
 
+  // Real-time hooks
+  const { threadUpdate } = useRealtimeThread(id as string, {
+    organizationId: organization?.id,
+    enabled: !!id && !!organization?.id,
+  });
+
+  const { members: viewers } = usePresence(id as string, {
+    enabled: !!id,
+  });
+
+  const { newComment, updatedComment, deletedCommentId } = useRealtimeComments(
+    id as string,
+    {
+      organizationId: organization?.id,
+      enabled: !!id && !!organization?.id,
+    }
+  );
+
+  const { latestActivity } = useRealtimeActivity({
+    organizationId: organization?.id,
+    enabled: !!organization?.id,
+  });
+
+  // Initialize local state from server data
+  useEffect(() => {
+    if (thread) {
+      setLocalThread(thread);
+    }
+  }, [thread]);
+
+  useEffect(() => {
+    if (comments?.comments) {
+      setLocalComments(comments.comments);
+    }
+  }, [comments]);
+
+  // Apply real-time thread updates
+  useEffect(() => {
+    if (threadUpdate && localThread) {
+      setLocalThread((prev: any) => ({
+        ...prev,
+        ...threadUpdate,
+      }));
+    }
+  }, [threadUpdate, localThread]);
+
+  // Apply real-time comment updates
+  useEffect(() => {
+    if (newComment) {
+      setLocalComments((prev) => [newComment, ...prev]);
+    }
+  }, [newComment]);
+
+  useEffect(() => {
+    if (updatedComment) {
+      setLocalComments((prev) =>
+        prev.map((comment) =>
+          comment.id === updatedComment.id ? updatedComment : comment
+        )
+      );
+    }
+  }, [updatedComment]);
+
+  useEffect(() => {
+    if (deletedCommentId) {
+      setLocalComments((prev) =>
+        prev.filter((comment) => comment.id !== deletedCommentId)
+      );
+    }
+  }, [deletedCommentId]);
+
   const utils = api.useUtils();
   const deleteThread = api.threads.delete.useMutation({
     onSuccess: () => {
       router.push('/threads');
     },
   });
+
+  const displayThread = localThread || thread;
 
   if (isLoading) {
     return (
@@ -70,7 +152,7 @@ export default function ThreadDetailPage() {
     );
   }
 
-  if (!thread) {
+  if (!displayThread && !isLoading) {
     return (
       <Layout>
         <div className="py-12 text-center">
@@ -83,6 +165,10 @@ export default function ThreadDetailPage() {
     );
   }
 
+  if (!displayThread) {
+    return null;
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -90,15 +176,37 @@ export default function ThreadDetailPage() {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center space-x-3">
-              <h1 className="text-3xl font-bold text-white">{thread.title}</h1>
-              <div className={`h-4 w-4 rounded-full ${getStatusColor(thread.status)}`} />
+              <h1 className="text-3xl font-bold text-white">{displayThread.title}</h1>
+              <div className={`h-4 w-4 rounded-full ${getStatusColor(displayThread.status)}`} />
             </div>
-            {thread.description && (
-              <p className="mt-2 text-gray-400">{thread.description}</p>
+            {displayThread.description && (
+              <p className="mt-2 text-gray-400">{displayThread.description}</p>
             )}
             <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
-              <span>Created {formatRelativeTime(new Date(thread.createdAt))}</span>
-              <span>Updated {formatRelativeTime(new Date(thread.updatedAt))}</span>
+              <span>Created {formatRelativeTime(new Date(displayThread.createdAt))}</span>
+              <span>Updated {formatRelativeTime(new Date(displayThread.updatedAt))}</span>
+              {viewers.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <UserGroupIcon className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400">{viewers.length} viewing</span>
+                  <div className="flex -space-x-2">
+                    {viewers.slice(0, 3).map((viewer) => (
+                      <div
+                        key={viewer.id}
+                        className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-900 bg-primary text-xs font-medium text-white"
+                        title={viewer.name}
+                      >
+                        {viewer.name.charAt(0).toUpperCase()}
+                      </div>
+                    ))}
+                    {viewers.length > 3 && (
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-900 bg-gray-700 text-xs font-medium text-white">
+                        +{viewers.length - 3}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex space-x-2">
@@ -177,9 +285,9 @@ export default function ThreadDetailPage() {
                 <CardTitle>Comments</CardTitle>
               </CardHeader>
               <CardContent>
-                {comments && comments.comments && comments.comments.length > 0 ? (
+                {localComments.length > 0 ? (
                   <div className="space-y-4">
-                    {comments.comments.map((comment: any) => (
+                    {localComments.map((comment: any) => (
                       <div key={comment.id} className="flex space-x-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
                           <span className="text-xs font-medium text-white">U</span>
@@ -202,7 +310,7 @@ export default function ThreadDetailPage() {
                   </div>
                 )}
                 <div className="mt-4">
-                  <CommentForm threadId={thread.id} />
+                  <CommentForm threadId={displayThread.id} />
                 </div>
               </CardContent>
             </Card>
@@ -216,8 +324,8 @@ export default function ThreadDetailPage() {
                 <CardTitle>Status</CardTitle>
               </CardHeader>
               <CardContent>
-                <Badge variant={thread.status === 'completed' ? 'success' : 'primary'} size="md">
-                  {thread.status.replace('_', ' ')}
+                <Badge variant={displayThread.status === 'completed' ? 'success' : 'primary'} size="md">
+                  {displayThread.status.replace('_', ' ')}
                 </Badge>
               </CardContent>
             </Card>
@@ -250,7 +358,7 @@ export default function ThreadDetailPage() {
 
       {/* Edit Modal */}
       <EditThreadModal
-        thread={thread}
+        thread={displayThread}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
       />
@@ -270,7 +378,7 @@ export default function ThreadDetailPage() {
           <Button
             variant="danger"
             loading={deleteThread.isLoading}
-            onClick={() => deleteThread.mutate({ id: thread.id })}
+            onClick={() => deleteThread.mutate({ id: displayThread.id })}
           >
             Delete Thread
           </Button>
@@ -279,7 +387,7 @@ export default function ThreadDetailPage() {
 
       {/* Connect Items Modal */}
       <ConnectItemsModal
-        threadId={thread.id}
+        threadId={displayThread.id}
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
       />

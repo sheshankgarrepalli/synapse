@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createTRPCRouter, orgProcedure } from '../trpc';
 import { Prisma } from '@prisma/client';
+import { semanticSearch } from '@/lib/ai/semantic-search';
 
 export const searchRouter = createTRPCRouter({
   /**
@@ -38,59 +39,28 @@ export const searchRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      // Full-text search for threads
-      const threads = await ctx.prisma.goldenThread.findMany({
-        where: {
-          organizationId: ctx.session.organizationId,
-          deletedAt: null,
-          OR: [
-            { title: { contains: input.query, mode: 'insensitive' } },
-            { description: { contains: input.query, mode: 'insensitive' } },
-          ],
-          ...(input.filters?.dateRange && {
-            createdAt: {
-              gte: input.filters.dateRange.from,
-              lte: input.filters.dateRange.to,
-            },
-          }),
-        },
-        take: Math.floor(input.limit / 2),
-        orderBy: { lastActivityAt: 'desc' },
-        include: {
-          creator: {
-            select: { fullName: true, avatarUrl: true },
-          },
-          _count: { select: { connectedItems: true } },
-        },
-      });
-
-      // Full-text search for items
-      const items = await ctx.prisma.connectedItem.findMany({
-        where: {
-          organizationId: ctx.session.organizationId,
-          deletedAt: null,
-          OR: [
-            { title: { contains: input.query, mode: 'insensitive' } },
-            { description: { contains: input.query, mode: 'insensitive' } },
-          ],
-          ...(input.filters?.integration && {
-            integrationType: input.filters.integration,
-          }),
-          ...(input.filters?.threadId && {
-            threadId: input.filters.threadId,
-          }),
-        },
-        take: Math.floor(input.limit / 2),
-        orderBy: { createdAt: 'desc' },
-        include: {
-          thread: { select: { id: true, title: true } },
-          creator: { select: { fullName: true, avatarUrl: true } },
+      // Use AI-powered semantic search
+      const results = await semanticSearch(input.query, {
+        organizationId: ctx.session.organizationId,
+        limit: input.limit,
+        type: 'both',
+        threshold: 0.5, // Moderate similarity threshold
+        filters: {
+          integration: input.filters?.integration,
+          dateRange: input.filters?.dateRange
+            ? {
+                from: input.filters.dateRange.from,
+                to: input.filters.dateRange.to,
+              }
+            : undefined,
+          threadId: input.filters?.threadId,
         },
       });
 
       return {
-        threads,
-        items,
+        threads: results.threads,
+        items: results.items,
+        metadata: results.metadata, // Include search metadata (type, execution time, etc.)
       };
     }),
 

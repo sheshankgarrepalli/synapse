@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, orgProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { invalidateThreadCache } from '@/lib/cache';
+import { generateEmbedding, prepareTextForEmbedding } from '@/lib/ai/embeddings';
 
 export const itemsRouter = createTRPCRouter({
   /**
@@ -84,6 +85,14 @@ export const itemsRouter = createTRPCRouter({
         });
       }
 
+      // Generate embedding for semantic search
+      const embeddingText = prepareTextForEmbedding({
+        title: input.title,
+        description: input.description,
+        additionalContext: `${input.integrationType} ${input.externalId}`,
+      });
+      const embedding = await generateEmbedding(embeddingText);
+
       // Create connected item
       const item = await ctx.prisma.connectedItem.create({
         data: {
@@ -98,6 +107,15 @@ export const itemsRouter = createTRPCRouter({
           createdBy: ctx.session.internalUserId,
         },
       });
+
+      // Store embedding separately using raw query (since Prisma doesn't support vector type)
+      if (embedding) {
+        await ctx.prisma.$executeRawUnsafe(`
+          UPDATE connected_items
+          SET embedding = '[${embedding.join(',')}]'::vector
+          WHERE id = '${item.id}'
+        `);
+      }
 
       // Update thread's connected items count
       await ctx.prisma.goldenThread.update({
