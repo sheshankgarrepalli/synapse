@@ -74,7 +74,7 @@ export const notionSync = inngest.createFunction(
                 remaining: integration.rateLimitRemaining,
                 resetAt: integration.rateLimitResetAt,
               });
-              return { pagesCreated: 0, pagesUpdated: 0, skipped: true };
+              return { pagesCreated: 0, pagesUpdated: 0, skipped: true, error: false };
             }
           }
 
@@ -90,7 +90,7 @@ export const notionSync = inngest.createFunction(
                 errorMessage: 'Missing access token',
               },
             });
-            return { pagesCreated: 0, pagesUpdated: 0, error: true };
+            return { pagesCreated: 0, pagesUpdated: 0, error: true, skipped: false };
           }
 
           const notionService = new NotionService(
@@ -142,7 +142,7 @@ export const notionSync = inngest.createFunction(
               });
             }
 
-            return { pagesCreated: 0, pagesUpdated: 0, error: true };
+            return { pagesCreated: 0, pagesUpdated: 0, error: true, skipped: false };
           }
 
           logger.info('Found updated pages', {
@@ -311,13 +311,13 @@ export const notionSync = inngest.createFunction(
             },
           });
 
-          return { pagesCreated, pagesUpdated, skipped: false };
+          return { pagesCreated, pagesUpdated, skipped: false, error: false };
         } catch (error) {
           logger.error('Integration sync failed', {
             integrationId: integration.id,
             error,
           });
-          return { pagesCreated: 0, pagesUpdated: 0, error: true };
+          return { pagesCreated: 0, pagesUpdated: 0, error: true, skipped: false };
         }
       });
 
