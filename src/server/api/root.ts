@@ -7,6 +7,9 @@ import { integrationsRouter } from './routers/integrations';
 import { automationsRouter } from './routers/automations';
 import { organizationsRouter } from './routers/organizations';
 import { analyticsRouter } from './routers/analytics';
+import { intelligenceRouter } from './routers/intelligence';
+import { settingsRouter } from './routers/settings';
+import { driftRouter } from './routers/drift';
 
 /**
  * This is the primary router for your server.
@@ -22,6 +25,9 @@ export const appRouter = createTRPCRouter({
   automations: automationsRouter,
   organizations: organizationsRouter,
   analytics: analyticsRouter,
+  intelligence: intelligenceRouter, // 🤖 AI-powered intelligence feed
+  settings: settingsRouter, // ⚙️ Organization and user settings
+  drift: driftRouter, // 🎨 Design-code drift detection
 });
 
 // export type definition of API

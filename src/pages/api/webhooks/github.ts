@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { createHmac } from 'crypto';
+import { queueRelationshipAnalysis } from '@/lib/ai/claude-code-analysis';
 
 // Disable body parsing to get raw body for signature verification
 export const config = {
@@ -442,7 +443,7 @@ async function executeCreateThreadAction(automation: any, action: any, context: 
 
   // If GitHub issue/PR, automatically connect it
   if (context.eventType === 'github.issue') {
-    await prisma.connectedItem.create({
+    const connectedItem = await prisma.connectedItem.create({
       data: {
         organizationId: automation.organizationId,
         threadId: thread.id,
@@ -466,6 +467,18 @@ async function executeCreateThreadAction(automation: any, action: any, context: 
       where: { id: thread.id },
       data: { lastActivityAt: new Date() },
     });
+
+    // 🤖 CLAUDE CODE ANALYSIS: Queue for analysis
+    console.log('🤖 Queuing item for Claude Code analysis...');
+    try {
+      const requestId = await queueRelationshipAnalysis(connectedItem.id, automation.organizationId);
+      console.log('✅ Analysis queued:', requestId);
+      console.log('📝 Check .claude-analysis/prompts/ for the analysis prompt');
+      console.log('💬 Ask Claude Code: "process the analysis queue"');
+    } catch (error) {
+      console.error('❌ Failed to queue analysis:', error);
+      // Don't fail the webhook if queuing fails
+    }
   }
 
   // Log activity (activity feed disabled due to schema requirements)

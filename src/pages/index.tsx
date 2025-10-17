@@ -43,6 +43,22 @@ export default function Home() {
 
             <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <Link
+                href="/intelligence"
+                className="rounded-lg border-2 border-primary bg-[#1A1F28] p-6 transition-colors hover:bg-[#2D3748]"
+              >
+                <div className="mb-2 flex items-center space-x-2">
+                  <span className="text-2xl">🤖</span>
+                  <h3 className="text-xl font-semibold text-white">
+                    Intelligence Feed
+                  </h3>
+                </div>
+                <p className="text-gray-400">
+                  AI-powered insights and auto-detected relationships
+                </p>
+                <p className="mt-2 text-sm text-primary">← Start Here</p>
+              </Link>
+
+              <Link
                 href="/dashboard"
                 className="rounded-lg border border-gray-800 bg-[#1A1F28] p-6 transition-colors hover:border-primary hover:bg-[#2D3748]"
               >

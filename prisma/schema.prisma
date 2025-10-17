@@ -39,16 +39,20 @@ model Organization {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  users          User[]
-  goldenThreads  GoldenThread[]
-  connectedItems ConnectedItem[]
-  integrations   Integration[]
-  automations    Automation[]
-  comments       Comment[]
-  activityFeed   ActivityFeed[]
-  webhooks       Webhook[]
-  projects       Project[]
-  apiKeys        ApiKey[]
+  users            User[]
+  goldenThreads    GoldenThread[]
+  connectedItems   ConnectedItem[]
+  integrations     Integration[]
+  automations      Automation[]
+  comments         Comment[]
+  activityFeed     ActivityFeed[]
+  webhooks         Webhook[]
+  projects         Project[]
+  apiKeys          ApiKey[]
+  designSnapshots  DesignSnapshot[]
+  codeSnapshots    CodeSnapshot[]
+  designCodeDrifts DesignCodeDrift[]
+  designCodeLinks  DesignCodeLink[]
 
   @@index([slug])
   @@index([stripeCustomerId], map: "idx_organizations_stripe_customer")
@@ -93,6 +97,8 @@ model User {
   createdAutomations   Automation[]
   createdApiKeys       ApiKey[]
   addedCollaborators   ThreadCollaborator[] @relation("CollaboratorAdder")
+  resolvedDrifts       DesignCodeDrift[]
+  createdDesignCodeLinks DesignCodeLink[]
 
   @@index([organizationId], map: "idx_users_org")
   @@index([email], map: "idx_users_email")
@@ -198,11 +204,15 @@ model ConnectedItem {
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
 
   // Relations
-  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  thread       GoldenThread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  creator      User           @relation(fields: [createdBy], references: [id])
-  comments     Comment[]
-  activityFeed ActivityFeed[]
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  thread          GoldenThread      @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  creator         User              @relation(fields: [createdBy], references: [id])
+  comments        Comment[]
+  activityFeed    ActivityFeed[]
+  designDrifts    DesignCodeDrift[] @relation("DesignItem")
+  codeDrifts      DesignCodeDrift[] @relation("CodeItem")
+  designLinks     DesignCodeLink[]  @relation("DesignLinkItem")
+  codeLinks       DesignCodeLink[]  @relation("CodeLinkItem")
 
   @@unique([threadId, integrationType, externalId])
   @@index([threadId], map: "idx_items_thread")
@@ -487,4 +497,176 @@ model ApiKey {
   @@index([organizationId], map: "idx_api_keys_org")
   @@index([keyPrefix], map: "idx_api_keys_prefix")
   @@map("api_keys")
+}
+
+// ==========================================
+// DESIGN-CODE DRIFT TRACKING
+// ==========================================
+
+model DesignSnapshot {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Design Source (Figma)
+  integrationType String  @map("integration_type") @db.VarChar(50) // "figma"
+  externalFileId  String  @map("external_file_id") @db.VarChar(500)
+  externalNodeId  String? @map("external_node_id") @db.VarChar(500) // Specific component/frame
+  fileUrl         String? @map("file_url")
+
+  // Snapshot Data (from Figma API)
+  fileName      String  @db.VarChar(500)
+  nodeName      String? @map("node_name") @db.VarChar(500)
+  nodeType      String? @map("node_type") @db.VarChar(100) // "COMPONENT", "FRAME", etc.
+
+  // Design Properties (JSON from Figma API)
+  designData    Json    @map("design_data") // Full node data from Figma
+  componentData Json?   @map("component_data") // If it's a component
+  stylesData    Json?   @map("styles_data") // Text styles, colors, effects
+
+  // Thumbnail
+  thumbnailUrl  String? @map("thumbnail_url")
+
+  // Version Info
+  versionId     String? @map("version_id") @db.VarChar(255)
+  versionName   String? @map("version_name") @db.VarChar(500)
+
+  // Metadata
+  capturedAt    DateTime @default(now()) @map("captured_at") @db.Timestamptz(6)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  drifts        DesignCodeDrift[]
+
+  @@unique([externalFileId, versionId])
+  @@index([organizationId], map: "idx_snapshots_org")
+  @@index([externalFileId], map: "idx_snapshots_file")
+  @@index([capturedAt(sort: Desc)], map: "idx_snapshots_captured")
+  @@map("design_snapshots")
+}
+
+model CodeSnapshot {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Code Source (GitHub)
+  integrationType String  @map("integration_type") @db.VarChar(50) // "github"
+  repository      String  @db.VarChar(500)
+  filePath        String  @map("file_path") @db.VarChar(1000)
+  componentName   String? @map("component_name") @db.VarChar(255)
+
+  // Code Properties
+  codeContent     String? @map("code_content") // File content
+  codeLanguage    String? @map("code_language") @db.VarChar(50)
+
+  // Extracted Properties (parsed from code)
+  extractedProps  Json    @map("extracted_props") // Colors, spacing, text sizes, etc.
+
+  // Git Info
+  commitSha       String  @map("commit_sha") @db.VarChar(255)
+  commitMessage   String? @map("commit_message")
+  branch          String? @db.VarChar(255)
+
+  // Metadata
+  capturedAt      DateTime @default(now()) @map("captured_at") @db.Timestamptz(6)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  drifts        DesignCodeDrift[]
+
+  @@unique([repository, filePath, commitSha])
+  @@index([organizationId], map: "idx_code_snapshots_org")
+  @@index([repository], map: "idx_code_snapshots_repo")
+  @@index([capturedAt(sort: Desc)], map: "idx_code_snapshots_captured")
+  @@map("code_snapshots")
+}
+
+model DesignCodeDrift {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Linked Snapshots
+  designSnapshotId String? @map("design_snapshot_id") @db.Uuid
+  codeSnapshotId   String? @map("code_snapshot_id") @db.Uuid
+
+  // Linked Items (for thread connection)
+  designItemId     String? @map("design_item_id") @db.Uuid // ConnectedItem for Figma file
+  codeItemId       String? @map("code_item_id") @db.Uuid // ConnectedItem for GitHub PR/file
+
+  // Drift Detection
+  driftType        String  @map("drift_type") @db.VarChar(100) // "design_updated", "code_updated", "both_changed"
+  status           String  @default("detected") @db.VarChar(50) // "detected", "acknowledged", "resolved", "ignored"
+  severity         String  @default("medium") @db.VarChar(50) // "low", "medium", "high", "critical"
+
+  // Detected Changes (JSON array of specific diffs)
+  changes          Json    @default("[]") // [{ property: "color", designValue: "#000", codeValue: "#333" }]
+
+  // AI-Generated Summary
+  summary          String? // "Button color changed from blue to green in Figma but code still uses blue"
+  impact           String? // "Affects 3 screens in the payment flow"
+  recommendation   String? // "Update Button.tsx line 42 to use colors.primary.500"
+
+  // Confidence Score
+  confidence       Float   @default(0.0) // 0.0 - 1.0
+
+  // Issue Tracking
+  autoCreatedIssue String? @map("auto_created_issue") // GitHub issue URL if auto-created
+  resolvedBy       String? @map("resolved_by") @db.Uuid
+  resolvedAt       DateTime? @map("resolved_at") @db.Timestamptz(6)
+
+  // Metadata
+  detectedAt       DateTime @default(now()) @map("detected_at") @db.Timestamptz(6)
+  acknowledgedAt   DateTime? @map("acknowledged_at") @db.Timestamptz(6)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  organization     Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  designSnapshot   DesignSnapshot?  @relation(fields: [designSnapshotId], references: [id])
+  codeSnapshot     CodeSnapshot?    @relation(fields: [codeSnapshotId], references: [id])
+  designItem       ConnectedItem?   @relation("DesignItem", fields: [designItemId], references: [id])
+  codeItem         ConnectedItem?   @relation("CodeItem", fields: [codeItemId], references: [id])
+  resolver         User?            @relation(fields: [resolvedBy], references: [id])
+
+  @@index([organizationId], map: "idx_drift_org")
+  @@index([status], map: "idx_drift_status")
+  @@index([severity], map: "idx_drift_severity")
+  @@index([detectedAt(sort: Desc)], map: "idx_drift_detected")
+  @@map("design_code_drifts")
+}
+
+model DesignCodeLink {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+
+  // Design → Code Mapping
+  designItemId   String  @map("design_item_id") @db.Uuid // Figma file ConnectedItem
+  codeItemId     String  @map("code_item_id") @db.Uuid // GitHub file/component ConnectedItem
+
+  // Link Type
+  linkType       String  @map("link_type") @db.VarChar(50) // "implements", "references", "synced"
+
+  // Tracking Info
+  isMonitored    Boolean @default(true) @map("is_monitored") // Watch for drift
+  lastCheckedAt  DateTime? @map("last_checked_at") @db.Timestamptz(6)
+  lastSyncedAt   DateTime? @map("last_synced_at") @db.Timestamptz(6)
+
+  // Creation
+  createdBy      String  @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  designItem     ConnectedItem @relation("DesignLinkItem", fields: [designItemId], references: [id], onDelete: Cascade)
+  codeItem       ConnectedItem @relation("CodeLinkItem", fields: [codeItemId], references: [id], onDelete: Cascade)
+  creator        User          @relation(fields: [createdBy], references: [id])
+
+  @@unique([designItemId, codeItemId])
+  @@index([organizationId], map: "idx_design_code_links_org")
+  @@index([designItemId], map: "idx_design_code_links_design")
+  @@index([codeItemId], map: "idx_design_code_links_code")
+  @@index([isMonitored], map: "idx_design_code_links_monitored")
+  @@map("design_code_links")
 }

@@ -1,0 +1,90 @@
+{
+  "requestId": "test-rel-demo",
+  "analyzedAt": "2025-10-16T20:15:00Z",
+  "newItem": {
+    "source": "github",
+    "type": "issue",
+    "title": "Implement payment authentication flow"
+  },
+  "relationships": [
+    {
+      "targetItemId": "linear-item-002",
+      "relationshipType": "implements",
+      "confidence": 0.95,
+      "reasoning": "Nearly identical scope - both about implementing authentication validation before payment access. GitHub issue mentions 'backend API needs to validate user sessions before allowing access to the payment page' which exactly matches the Linear issue's description of authentication middleware for payment routes."
+    },
+    {
+      "targetItemId": "figma-item-001",
+      "relationshipType": "implements",
+      "confidence": 0.92,
+      "reasoning": "GitHub issue explicitly states it should 'align with the authentication UI designs that were approved last week.' The Figma file contains these authentication screens and payment checkout UI designs that the issue is implementing."
+    },
+    {
+      "targetItemId": "slack-item-003",
+      "relationshipType": "references",
+      "confidence": 0.88,
+      "reasoning": "Issue mentions 'security requirements discussed in the team meeting' - the Slack discussion IS that team meeting where authentication at payment entry point was decided. Direct reference to the source of requirements."
+    },
+    {
+      "targetItemId": "notion-item-006",
+      "relationshipType": "implements",
+      "confidence": 0.85,
+      "reasoning": "GitHub issue implements the PRD requirements from Notion. The PRD specifies 'authentication must happen before checkout begins' which is exactly what this issue is building. Clear implementation of documented requirements."
+    },
+    {
+      "targetItemId": "github-item-004",
+      "relationshipType": "relates_to",
+      "confidence": 0.78,
+      "reasoning": "The authentication service PR provides the underlying infrastructure that the payment authentication will integrate with. Related work in the authentication ecosystem - payment auth depends on the refactored auth service."
+    },
+    {
+      "targetItemId": "linear-item-005",
+      "relationshipType": "relates_to",
+      "confidence": 0.58,
+      "reasoning": "Both part of payment flow work, but confirmation page focuses on post-payment UI without authentication concerns. Same feature area but different functional concerns - weak relationship."
+    }
+  ],
+  "shouldCreateThread": true,
+  "suggestedThread": {
+    "title": "Payment Flow Authentication Implementation",
+    "description": "Complete implementation of authentication requirements for the payment checkout flow. Includes backend middleware (Linear), UI designs (Figma), security requirements (Slack discussion), and PRD specs (Notion). This thread connects design, requirements, and implementation work for secure payment authentication.",
+    "confidence": 0.91,
+    "suggestedTags": ["authentication", "payment", "security", "auto-detected", "claude-code"],
+    "itemsToConnect": [
+      "test-github-456",
+      "figma-item-001",
+      "linear-item-002",
+      "slack-item-003",
+      "github-item-004",
+      "notion-item-006"
+    ],
+    "reasoning": "4 high-confidence relationships detected (0.85-0.95 range). This represents a complete feature implementation spanning requirements (Notion PRD), planning (Slack discussion), design (Figma), and implementation (Linear backend + GitHub issue). All items share the same core objective: adding authentication to payment flow."
+  },
+  "insights": [
+    {
+      "type": "complete_coverage",
+      "message": "🎯 Complete feature coverage detected: This work has clear requirements (Notion), team alignment (Slack), approved designs (Figma), and implementation tasks (Linear + GitHub). Well-coordinated cross-tool effort.",
+      "confidence": 0.89
+    },
+    {
+      "type": "duplicate_work_warning",
+      "message": "⚠️ Potential duplicate: GitHub issue #456 and Linear issue (linear-item-002) appear to describe the same backend authentication middleware work. Consider consolidating or clarifying scope differences.",
+      "confidence": 0.82
+    },
+    {
+      "type": "dependency_detected",
+      "message": "🔗 Dependency chain: Payment authentication implementation depends on the authentication service refactor (PR github-item-004). Ensure the PR is merged before starting payment auth work.",
+      "confidence": 0.76
+    }
+  ],
+  "statistics": {
+    "itemsAnalyzed": 6,
+    "relationshipsFound": 6,
+    "highConfidenceCount": 4,
+    "mediumConfidenceCount": 1,
+    "lowConfidenceCount": 1,
+    "avgConfidence": 0.83
+  },
+  "completedAt": "2025-10-16T20:15:30Z",
+  "processingTimeMs": 30000
+}
