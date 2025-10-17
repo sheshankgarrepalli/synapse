@@ -10,8 +10,20 @@ let pusherInstance: Pusher | null = null;
 
 export function getPusherClient(): Pusher {
   if (!pusherInstance) {
-    pusherInstance = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    // Check if public env vars are available
+    if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+      // Return a mock for server-side or missing config
+      return {
+        subscribe: () => ({
+          bind: () => {},
+          unbind: () => {},
+        }),
+        unsubscribe: () => {},
+      } as unknown as Pusher;
+    }
+
+    pusherInstance = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
       authEndpoint: '/api/pusher/auth',
       auth: {
         headers: {
