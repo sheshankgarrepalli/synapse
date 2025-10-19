@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonThread } from '@/components/ui/Skeleton';
 import { api } from '@/utils/api';
 import { formatRelativeTime, getStatusColor } from '@/lib/utils';
 import { PlusIcon } from '@heroicons/react/24/outline';
@@ -68,31 +70,40 @@ export default function ThreadsPage() {
         {/* Threads Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {isLoading ? (
-            <div className="col-span-full">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-center py-12">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <SkeletonThread key={i} />
+              ))}
+            </>
           ) : threadsData?.threads.length === 0 ? (
             <div className="col-span-full">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="py-12 text-center">
-                    <h3 className="text-lg font-medium text-white">No threads found</h3>
-                    <p className="mt-2 text-sm text-gray-400">
-                      Get started by creating your first Golden Thread
-                    </p>
-                    <Button className="mt-4" onClick={() => setIsCreateModalOpen(true)}>
-                      <PlusIcon className="mr-2 h-5 w-5" />
-                      Create Thread
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <EmptyState
+                illustration="threads"
+                title={searchQuery || statusFilter !== 'all' ? 'No threads found' : 'No Golden Threads yet'}
+                description={
+                  searchQuery || statusFilter !== 'all'
+                    ? 'Try adjusting your search or filter to find what you\'re looking for.'
+                    : 'Golden Threads help you connect and track related work items across all your tools. Create your first thread to get started!'
+                }
+                action={{
+                  label: 'Create Thread',
+                  onClick: () => setIsCreateModalOpen(true),
+                }}
+                secondaryAction={
+                  searchQuery || statusFilter !== 'all'
+                    ? {
+                        label: 'Clear Filters',
+                        onClick: () => {
+                          setSearchQuery('');
+                          setStatusFilter('all');
+                        },
+                      }
+                    : {
+                        label: 'Learn More',
+                        href: '/demo',
+                      }
+                }
+              />
             </div>
           ) : (
             threadsData?.threads.map((thread) => (

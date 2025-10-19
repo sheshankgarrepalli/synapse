@@ -1,10 +1,20 @@
+import { useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { IntegrationPreviewModal, integrationPreviews } from '@/components/integrations/IntegrationPreviewModal';
+import { IntegrationHealthMonitor } from '@/components/integrations/IntegrationHealthMonitor';
 import { api } from '@/utils/api';
 import { formatRelativeTime } from '@/lib/utils';
-import { CheckCircleIcon, XCircleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import {
+  CheckCircleIcon,
+  XCircleIcon,
+  ArrowPathIcon,
+  InformationCircleIcon,
+  ExclamationTriangleIcon,
+  ChartBarIcon,
+} from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
 const integrations = [
@@ -75,8 +85,17 @@ const integrations = [
 ];
 
 export default function IntegrationsPage() {
+  const [previewIntegration, setPreviewIntegration] = useState<string | null>(null);
+  const [healthMonitorIntegration, setHealthMonitorIntegration] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
   const { data: connections, isLoading } = api.integrations.list.useQuery();
   const { data: webhookStatus } = api.integrations.getWebhookStatus.useQuery();
+  const { data: healthStatus } = api.integrations.getHealthStatus.useQuery(undefined, {
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   const utils = api.useUtils();
 
@@ -103,6 +122,25 @@ export default function IntegrationsPage() {
 
   const getConnectionStatus = (integrationId: string) => {
     return connections?.find((conn) => conn.integrationType === integrationId);
+  };
+
+  const getHealthStatusForIntegration = (integrationId: string) => {
+    return healthStatus?.find((h) => h.integrationType === integrationId);
+  };
+
+  const getHealthIcon = (status?: string) => {
+    if (!status) return null;
+
+    switch (status) {
+      case 'healthy':
+        return <CheckCircleIcon className="h-5 w-5 text-green-500" />;
+      case 'warning':
+        return <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500" />;
+      case 'error':
+        return <XCircleIcon className="h-5 w-5 text-red-500" />;
+      default:
+        return null;
+    }
   };
 
   const handleConnect = (integrationId: string) => {
@@ -186,6 +224,34 @@ export default function IntegrationsPage() {
                           <p className="mt-4 text-xs text-gray-500">
                             Connected {formatRelativeTime(new Date(connection.connectedAt))}
                           </p>
+                          {(() => {
+                            const health = getHealthStatusForIntegration(integration.id);
+                            return health && (
+                              <div className="mt-3 rounded-md border border-gray-700 bg-gray-900 p-3">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2">
+                                    {getHealthIcon(health.healthStatus)}
+                                    <div>
+                                      <p className="text-xs font-medium text-gray-300">Health Status</p>
+                                      <p className="text-xs text-gray-500">
+                                        {health.lastSyncAt
+                                          ? `Last sync ${formatRelativeTime(new Date(health.lastSyncAt))}`
+                                          : 'No sync data'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setHealthMonitorIntegration({ id: integration.id, name: integration.name })}
+                                    title="View health details"
+                                  >
+                                    <ChartBarIcon className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })()}
                           {integration.id === 'github' && webhookStatus && (
                             <div className="mt-3 rounded-md border border-gray-700 bg-gray-900 p-3">
                               <div className="flex items-center justify-between">
@@ -256,13 +322,24 @@ export default function IntegrationsPage() {
                           )}
                         </div>
                       ) : (
-                        <Button
-                          className="w-full"
-                          size="sm"
-                          onClick={() => handleConnect(integration.id)}
-                        >
-                          Connect
-                        </Button>
+                        <div className="flex w-full space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPreviewIntegration(integration.id)}
+                            className="flex-shrink-0"
+                            title="Learn more"
+                          >
+                            <InformationCircleIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            size="sm"
+                            onClick={() => setPreviewIntegration(integration.id)}
+                          >
+                            Connect
+                          </Button>
+                        </div>
                       )}
                     </CardFooter>
                   </Card>
@@ -331,13 +408,24 @@ export default function IntegrationsPage() {
                           Disconnect
                         </Button>
                       ) : (
-                        <Button
-                          className="w-full"
-                          size="sm"
-                          onClick={() => handleConnect(integration.id)}
-                        >
-                          Connect
-                        </Button>
+                        <div className="flex w-full space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPreviewIntegration(integration.id)}
+                            className="flex-shrink-0"
+                            title="Learn more"
+                          >
+                            <InformationCircleIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            size="sm"
+                            onClick={() => setPreviewIntegration(integration.id)}
+                          >
+                            Connect
+                          </Button>
+                        </div>
                       )}
                     </CardFooter>
                   </Card>
@@ -406,13 +494,24 @@ export default function IntegrationsPage() {
                           Disconnect
                         </Button>
                       ) : (
-                        <Button
-                          className="w-full"
-                          size="sm"
-                          onClick={() => handleConnect(integration.id)}
-                        >
-                          Connect
-                        </Button>
+                        <div className="flex w-full space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPreviewIntegration(integration.id)}
+                            className="flex-shrink-0"
+                            title="Learn more"
+                          >
+                            <InformationCircleIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            className="flex-1"
+                            size="sm"
+                            onClick={() => setPreviewIntegration(integration.id)}
+                          >
+                            Connect
+                          </Button>
+                        </div>
                       )}
                     </CardFooter>
                   </Card>
@@ -421,6 +520,28 @@ export default function IntegrationsPage() {
           </div>
         </div>
       </div>
+
+      {/* Integration Preview Modal */}
+      <IntegrationPreviewModal
+        isOpen={!!previewIntegration}
+        onClose={() => setPreviewIntegration(null)}
+        integration={previewIntegration ? integrationPreviews[previewIntegration] : null}
+        onConnect={() => {
+          if (previewIntegration) {
+            handleConnect(previewIntegration);
+          }
+        }}
+      />
+
+      {/* Integration Health Monitor Modal */}
+      {healthMonitorIntegration && (
+        <IntegrationHealthMonitor
+          isOpen={!!healthMonitorIntegration}
+          onClose={() => setHealthMonitorIntegration(null)}
+          integrationType={healthMonitorIntegration.id}
+          integrationName={healthMonitorIntegration.name}
+        />
+      )}
     </Layout>
   );
 }

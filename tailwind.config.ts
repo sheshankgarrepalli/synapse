@@ -88,10 +88,19 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        shimmer: {
+          "0%": { backgroundPosition: "-1000px 0" },
+          "100%": { backgroundPosition: "1000px 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        shimmer: "shimmer 2s infinite linear",
+      },
+      backgroundImage: {
+        "shimmer-gradient":
+          "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent)",
       },
     },
   },

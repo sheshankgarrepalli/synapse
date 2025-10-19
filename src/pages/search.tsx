@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { api } from '@/utils/api';
 import { formatRelativeTime } from '@/lib/utils';
 import { MagnifyingGlassIcon, FunnelIcon, SparklesIcon } from '@heroicons/react/24/outline';
@@ -152,29 +153,33 @@ export default function SearchPage() {
 
         {/* Empty State */}
         {query.length === 0 && (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <MagnifyingGlassIcon className="mx-auto h-16 w-16 text-gray-600" />
-              <h3 className="mt-4 text-lg font-medium text-white">Start searching</h3>
-              <p className="mt-2 text-sm text-gray-400">
-                Search across all your threads, items, and comments
-              </p>
-              <div className="mt-6 space-y-2 text-sm text-gray-500">
-                <p>💡 Try searching for:</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {['design system', 'authentication', 'API endpoint', 'user flow'].map((suggestion) => (
+          <div className="space-y-6">
+            <EmptyState
+              illustration="search"
+              title="Search across your entire workspace"
+              description="Use AI-powered semantic search to find anything across all your connected tools. Search by keywords, concepts, or even related ideas."
+              action={{
+                label: 'Connect More Tools',
+                href: '/integrations',
+              }}
+            />
+            <Card>
+              <CardContent className="pt-6">
+                <p className="mb-3 text-sm font-medium text-gray-400">💡 Try searching for:</p>
+                <div className="flex flex-wrap gap-2">
+                  {['design system', 'authentication', 'API endpoint', 'user flow', 'button component', 'login feature'].map((suggestion) => (
                     <button
                       key={suggestion}
                       onClick={() => setQuery(suggestion)}
-                      className="rounded-lg border border-gray-700 px-3 py-1 text-gray-400 transition-colors hover:border-primary hover:text-white"
+                      className="rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-400 transition-colors hover:border-primary hover:text-white"
                     >
                       {suggestion}
                     </button>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </Layout>

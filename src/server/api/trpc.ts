@@ -9,20 +9,14 @@ import { getAuth } from '@clerk/nextjs/server';
  * CREATE CONTEXT
  *
  * This is the context that is passed to all tRPC procedures.
- * It includes the database client and the user session.
+ * It includes the database client and the request/response objects.
  */
 export const createTRPCContext = (opts: CreateNextContextOptions) => {
-  // Get the session from Clerk using getAuth (Pages Router compatible)
-  const session = getAuth(opts.req);
-
+  // Return req and res so we can access them in middleware
   return {
     prisma,
-    session: session.userId
-      ? {
-          userId: session.userId,
-          organizationId: session.orgId || null,
-        }
-      : null,
+    req: opts.req,
+    res: opts.res,
   };
 };
 
@@ -59,14 +53,20 @@ export const publicProcedure = t.procedure;
  * Protected (authenticated) procedure
  */
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
-  if (!ctx.session || !ctx.session.userId) {
+  // Get auth from request object
+  const auth = getAuth(ctx.req);
+
+  if (!auth.userId) {
     throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
 
   return next({
     ctx: {
       ...ctx,
-      session: ctx.session,
+      session: {
+        userId: auth.userId,
+        organizationId: auth.orgId || null,
+      },
     },
   });
 });

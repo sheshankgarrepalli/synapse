@@ -1,10 +1,12 @@
 import OpenAI from 'openai';
 import { logger } from '../logger';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client only if API key is provided
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
 /**
  * Generate embeddings for a given text using OpenAI's text-embedding-3-small model
@@ -12,6 +14,11 @@ const openai = new OpenAI({
  */
 export async function generateEmbedding(text: string): Promise<number[] | null> {
   try {
+    if (!openai) {
+      logger.warn('OpenAI API key not configured, skipping embedding generation');
+      return null;
+    }
+
     if (!text || text.trim().length === 0) {
       logger.warn('Attempted to generate embedding for empty text');
       return null;
@@ -47,6 +54,11 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
  */
 export async function generateEmbeddingsBatch(texts: string[]): Promise<(number[] | null)[]> {
   try {
+    if (!openai) {
+      logger.warn('OpenAI API key not configured, skipping batch embedding generation');
+      return texts.map(() => null);
+    }
+
     if (!texts || texts.length === 0) {
       return [];
     }

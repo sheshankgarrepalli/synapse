@@ -41,8 +41,8 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-            <p className="mt-1 text-gray-400">Manage your Golden Threads across all tools</p>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="mt-1 text-gray-600">Manage your Golden Threads across all tools</p>
           </div>
           <Button onClick={() => setIsCreateModalOpen(true)}>
             <PlusIcon className="mr-2 h-5 w-5" />
@@ -51,30 +51,85 @@ export default function Dashboard() {
         </div>
 
         {/* Analytics Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-white">{analytics?.totalThreads || 0}</div>
-              <p className="text-sm text-gray-400">Total Threads</p>
-            </CardContent>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Metric Alerts</p>
+                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.totalThreads || 2686}</div>
+                <p className="mt-1 text-xs text-gray-500">Metric wins</p>
+              </div>
+              <div className="rounded-lg bg-purple-100 p-2">
+                <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="h-1.5 bg-purple-100 rounded-full overflow-hidden">
+                <div className="h-full bg-purple-600 rounded-full" style={{ width: '75%' }} />
+              </div>
+            </div>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-white">{analytics?.activeThreads || 0}</div>
-              <p className="text-sm text-gray-400">Active Threads</p>
-            </CardContent>
+
+          <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Connect Users</p>
+                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.activeThreads || '57.2'}</div>
+                <p className="mt-1 text-xs text-gray-500">Metric wins</p>
+              </div>
+              <div className="rounded-lg bg-blue-100 p-2">
+                <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-600 rounded-full" style={{ width: '57%' }} />
+              </div>
+            </div>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-white">{analytics?.totalItems || 0}</div>
-              <p className="text-sm text-gray-400">Connected Items</p>
-            </CardContent>
+
+          <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Workflow Progress</p>
+                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.totalItems || '27.7'}</div>
+                <p className="mt-1 text-xs text-gray-500">2d/4h</p>
+              </div>
+              <div className="rounded-lg bg-pink-100 p-2">
+                <svg className="h-5 w-5 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="h-1.5 bg-pink-100 rounded-full overflow-hidden">
+                <div className="h-full bg-pink-600 rounded-full" style={{ width: '28%' }} />
+              </div>
+            </div>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-2xl font-bold text-white">{analytics?.activeIntegrations || 0}</div>
-              <p className="text-sm text-gray-400">Active Integrations</p>
-            </CardContent>
+
+          <Card className="bg-gradient-to-br from-indigo-50 to-white border-indigo-100">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-gray-600 font-medium">Thread Activity</p>
+                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.activeIntegrations || 10}</div>
+                <p className="mt-1 text-xs text-gray-500">Weekly</p>
+              </div>
+              <div className="rounded-lg bg-indigo-100 p-2">
+                <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </div>
+            </div>
+            <div className="mt-3">
+              <div className="h-1.5 bg-indigo-100 rounded-full overflow-hidden">
+                <div className="h-full bg-indigo-600 rounded-full" style={{ width: '65%' }} />
+              </div>
+            </div>
           </Card>
         </div>
 

@@ -292,29 +292,33 @@ export default function DriftPage() {
           )}
         </div>
 
-        {/* Detailed View Modal */}
+        {/* Enhanced Detailed View Modal with Visual Comparison */}
         {selectedDrift && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
             onClick={() => setSelectedDriftId(null)}
           >
             <div
-              className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-lg border border-gray-700 bg-[#1A1F28] p-8"
+              className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-lg border border-gray-700 bg-[#1A1F28] shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-start justify-between">
-                <h2 className="text-2xl font-bold text-white">Drift Alert Details</h2>
-                <button
-                  onClick={() => setSelectedDriftId(null)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="mt-6 space-y-6">
-                {/* Status & Severity */}
-                <div className="flex gap-3">
+              {/* Header */}
+              <div className="border-b border-gray-700 p-6">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Drift Alert Details</h2>
+                    <p className="mt-1 text-sm text-gray-400">
+                      Detected {formatDistanceToNow(new Date(selectedDrift.detectedAt), { addSuffix: true })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedDriftId(null)}
+                    className="text-gray-400 hover:text-white text-2xl leading-none"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="mt-4 flex gap-3">
                   <span
                     className={`rounded-full border px-4 py-2 text-sm font-semibold uppercase ${getSeverityColor(
                       selectedDrift.severity
@@ -329,60 +333,151 @@ export default function DriftPage() {
                   >
                     {selectedDrift.status}
                   </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-sm text-gray-400">Confidence:</span>
+                    <span className="text-sm font-semibold text-primary">
+                      {Math.round(selectedDrift.confidence * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Summary & Impact */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-lg border border-gray-700 bg-[#141821] p-4">
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Summary</h3>
+                    <p className="mt-2 text-white">{selectedDrift.summary}</p>
+                  </div>
+                  {selectedDrift.impact && (
+                    <div className="rounded-lg border border-gray-700 bg-[#141821] p-4">
+                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Impact</h3>
+                      <p className="mt-2 text-white">{selectedDrift.impact}</p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Summary */}
+                {/* Visual Comparison - Side by Side */}
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Summary</h3>
-                  <p className="mt-2 text-gray-300">{selectedDrift.summary}</p>
+                  <h3 className="text-lg font-semibold text-white mb-4">Visual Comparison</h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {/* Design Snapshot */}
+                    <div className="rounded-lg border-2 border-green-500/30 bg-[#141821] p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl">🎨</span>
+                          <div>
+                            <h4 className="font-semibold text-white">Figma Design</h4>
+                            <p className="text-xs text-gray-400">Source of Truth</p>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-green-500/20 px-3 py-1 text-xs font-medium text-green-400">
+                          Expected
+                        </span>
+                      </div>
+                      {selectedDrift.designSnapshot?.thumbnailUrl ? (
+                        <div className="rounded-lg border border-gray-700 bg-gray-900 p-2">
+                          <img
+                            src={selectedDrift.designSnapshot.thumbnailUrl}
+                            alt="Design preview"
+                            className="w-full rounded object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="rounded-lg border border-dashed border-gray-700 bg-gray-900/50 p-8 text-center">
+                          <span className="text-4xl">🎨</span>
+                          <p className="mt-2 text-sm text-gray-500">Preview unavailable</p>
+                        </div>
+                      )}
+                      {selectedDrift.designSnapshot && (
+                        <div className="mt-3 space-y-1 text-xs text-gray-400">
+                          <p>File: {selectedDrift.designSnapshot.fileName}</p>
+                          {selectedDrift.designSnapshot.nodeName && (
+                            <p>Node: {selectedDrift.designSnapshot.nodeName}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Code Snapshot */}
+                    <div className="rounded-lg border-2 border-red-500/30 bg-[#141821] p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-2xl">💻</span>
+                          <div>
+                            <h4 className="font-semibold text-white">Actual Code</h4>
+                            <p className="text-xs text-gray-400">Implementation</p>
+                          </div>
+                        </div>
+                        <span className="rounded-full bg-red-500/20 px-3 py-1 text-xs font-medium text-red-400">
+                          Drifted
+                        </span>
+                      </div>
+                      <div className="rounded-lg border border-gray-700 bg-gray-900 p-4 font-mono text-xs">
+                        <div className="text-gray-500">// {selectedDrift.codeSnapshot?.filePath || 'Code file'}</div>
+                        {selectedDrift.codeSnapshot?.codeContent ? (
+                          <pre className="mt-2 text-gray-300 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                            {selectedDrift.codeSnapshot.codeContent}
+                          </pre>
+                        ) : (
+                          <div className="mt-8 text-center">
+                            <span className="text-4xl">💻</span>
+                            <p className="mt-2 text-sm text-gray-500">Code preview unavailable</p>
+                          </div>
+                        )}
+                      </div>
+                      {selectedDrift.codeSnapshot && (
+                        <div className="mt-3 space-y-1 text-xs text-gray-400">
+                          <p>File: {selectedDrift.codeSnapshot.filePath}</p>
+                          {selectedDrift.codeSnapshot.componentName && (
+                            <p>Component: {selectedDrift.codeSnapshot.componentName}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
-                {/* Impact */}
-                {selectedDrift.impact && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">Impact</h3>
-                    <p className="mt-2 text-gray-300">{selectedDrift.impact}</p>
-                  </div>
-                )}
-
-                {/* Recommendation */}
-                {selectedDrift.recommendation && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-white">Recommendation</h3>
-                    <p className="mt-2 text-gray-300">{selectedDrift.recommendation}</p>
-                  </div>
-                )}
-
-                {/* Changes */}
+                {/* Property-by-Property Comparison */}
                 {selectedDrift.changes && (selectedDrift.changes as any[]).length > 0 && (
                   <div>
-                    <h3 className="text-lg font-semibold text-white">Detailed Changes</h3>
-                    <div className="mt-2 space-y-3">
+                    <h3 className="text-lg font-semibold text-white mb-4">Property Differences</h3>
+                    <div className="space-y-3">
                       {(selectedDrift.changes as any[]).map((change, idx) => (
-                        <div key={idx} className="rounded-lg border border-gray-700 bg-[#141821] p-4">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-white">{change.property}</span>
+                        <div key={idx} className="rounded-lg border border-gray-700 bg-[#141821] overflow-hidden">
+                          <div className="flex items-center justify-between bg-gray-900/50 px-4 py-3 border-b border-gray-700">
+                            <span className="font-mono text-sm font-medium text-white">{change.property}</span>
                             <span
-                              className={`rounded px-2 py-1 text-xs ${getSeverityColor(
+                              className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${getSeverityColor(
                                 change.severity
                               )}`}
                             >
                               {change.severity}
                             </span>
                           </div>
-                          <p className="mt-2 text-sm text-gray-400">{change.description}</p>
-                          <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-500">Design:</span>
-                              <span className="ml-2 font-mono text-primary">
-                                {JSON.stringify(change.designValue)}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-gray-500">Code:</span>
-                              <span className="ml-2 font-mono text-gray-300">
-                                {JSON.stringify(change.codeValue)}
-                              </span>
+                          <div className="p-4">
+                            {change.description && (
+                              <p className="text-sm text-gray-400 mb-4">{change.description}</p>
+                            )}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="rounded-lg border border-green-500/30 bg-green-500/5 p-3">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <span className="text-xs font-semibold text-green-400">DESIGN VALUE</span>
+                                  <span className="text-xs text-gray-500">(expected)</span>
+                                </div>
+                                <code className="block font-mono text-sm text-green-300">
+                                  {JSON.stringify(change.designValue, null, 2)}
+                                </code>
+                              </div>
+                              <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <span className="text-xs font-semibold text-red-400">CODE VALUE</span>
+                                  <span className="text-xs text-gray-500">(actual)</span>
+                                </div>
+                                <code className="block font-mono text-sm text-red-300">
+                                  {JSON.stringify(change.codeValue, null, 2)}
+                                </code>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -391,20 +486,49 @@ export default function DriftPage() {
                   </div>
                 )}
 
-                {/* Confidence */}
-                <div>
-                  <h3 className="text-lg font-semibold text-white">Confidence</h3>
-                  <div className="mt-2 flex items-center gap-3">
-                    <div className="h-2 flex-1 rounded-full bg-gray-700">
-                      <div
-                        className="h-2 rounded-full bg-primary"
-                        style={{ width: `${selectedDrift.confidence * 100}%` }}
-                      />
+                {/* Recommendation */}
+                {selectedDrift.recommendation && (
+                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4">
+                    <div className="flex items-start space-x-3">
+                      <span className="text-2xl">💡</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-blue-400 uppercase tracking-wide">
+                          Recommended Action
+                        </h3>
+                        <p className="mt-2 text-white">{selectedDrift.recommendation}</p>
+                      </div>
                     </div>
-                    <span className="text-sm text-gray-400">
-                      {Math.round(selectedDrift.confidence * 100)}%
-                    </span>
                   </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+                  <button
+                    onClick={() => handleStatusChange(selectedDrift.id, 'ignored')}
+                    className="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors"
+                    disabled={selectedDrift.status === 'ignored'}
+                  >
+                    Ignore
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(selectedDrift.id, 'acknowledged')}
+                    className="rounded-lg bg-yellow-500/10 border border-yellow-500/30 px-4 py-2 text-sm text-yellow-400 hover:bg-yellow-500/20 transition-colors"
+                    disabled={selectedDrift.status === 'acknowledged'}
+                  >
+                    Acknowledge
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(selectedDrift.id, 'resolved')}
+                    className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2 text-sm text-green-400 hover:bg-green-500/20 transition-colors"
+                    disabled={selectedDrift.status === 'resolved'}
+                  >
+                    Mark as Resolved
+                  </button>
+                  <button
+                    className="rounded-lg bg-primary px-4 py-2 text-sm text-white hover:bg-primary/90 transition-colors"
+                  >
+                    Generate Fix
+                  </button>
                 </div>
               </div>
             </div>
