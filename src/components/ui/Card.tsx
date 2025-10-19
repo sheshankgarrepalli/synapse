@@ -11,8 +11,8 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       <div
         ref={ref}
         className={cn(
-          'rounded-2xl border border-gray-200 bg-white p-6 shadow-sm',
-          hover && 'cursor-pointer transition-all hover:shadow-lg hover:border-purple-300',
+          'rounded-2xl border border-gray-800 bg-gray-900/50 p-6 shadow-sm backdrop-blur-sm',
+          hover && 'cursor-pointer transition-all hover:shadow-lg hover:border-primary/50',
           className
         )}
         {...props}
@@ -33,7 +33,7 @@ CardHeader.displayName = 'CardHeader';
 
 const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn('text-xl font-semibold text-gray-900', className)} {...props} />
+    <h3 ref={ref} className={cn('text-xl font-semibold text-white', className)} {...props} />
   )
 );
 
@@ -41,7 +41,7 @@ CardTitle.displayName = 'CardTitle';
 
 const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLParagraphElement>>(
   ({ className, ...props }, ref) => (
-    <p ref={ref} className={cn('text-sm text-gray-600', className)} {...props} />
+    <p ref={ref} className={cn('text-sm text-gray-400', className)} {...props} />
   )
 );
 
@@ -49,7 +49,7 @@ CardDescription.displayName = 'CardDescription';
 
 const CardContent = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('text-gray-700', className)} {...props} />
+    <div ref={ref} className={cn('text-gray-300', className)} {...props} />
   )
 );
 

@@ -169,18 +169,18 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
 
   return (
     <>
-      <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50 to-white p-5 shadow-sm">
+      <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-gray-900/50 p-5 shadow-sm backdrop-blur-sm">
         {/* Header */}
         <div className="mb-4 flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900">Get Started with Synapse</h3>
-            <p className="mt-1 text-sm text-gray-600">
+            <h3 className="text-lg font-semibold text-white">Get Started with Synapse</h3>
+            <p className="mt-1 text-sm text-gray-400">
               Complete these steps to unlock the full power of your workspace
             </p>
           </div>
           <button
             onClick={handleDismiss}
-            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
             aria-label="Dismiss checklist"
           >
             <XMarkIcon className="h-5 w-5" />
@@ -190,14 +190,14 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
         {/* Progress Bar */}
         <div className="mb-4">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-medium text-gray-700">
+            <span className="font-medium text-gray-300">
               {completedCount} of {totalCount} completed
             </span>
-            <span className="font-semibold text-purple-600">{progress}%</span>
+            <span className="font-semibold text-primary">{progress}%</span>
           </div>
-          <div className="h-2.5 overflow-hidden rounded-full bg-gray-200">
+          <div className="h-2.5 overflow-hidden rounded-full bg-gray-800">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-purple-600 to-purple-500 transition-all duration-500 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-primary to-purple-500 transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -211,17 +211,17 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
               className={cn(
                 'group rounded-xl border-2 p-4 transition-all',
                 item.completed
-                  ? 'border-green-200 bg-green-50/50'
-                  : 'border-gray-200 bg-white hover:border-purple-200 hover:shadow-sm'
+                  ? 'border-green-500/30 bg-green-500/10'
+                  : 'border-gray-700 bg-gray-800/50 hover:border-primary/50 hover:shadow-sm'
               )}
             >
               <div className="flex items-start space-x-3">
                 {/* Checkbox Icon */}
                 <div className="flex-shrink-0">
                   {item.completed ? (
-                    <CheckCircleSolidIcon className="h-6 w-6 text-green-600" />
+                    <CheckCircleSolidIcon className="h-6 w-6 text-green-500" />
                   ) : (
-                    <div className="h-6 w-6 rounded-full border-2 border-gray-300 group-hover:border-purple-400" />
+                    <div className="h-6 w-6 rounded-full border-2 border-gray-600 group-hover:border-primary" />
                   )}
                 </div>
 
@@ -230,7 +230,7 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
                   <h4
                     className={cn(
                       'text-sm font-medium',
-                      item.completed ? 'text-gray-600 line-through' : 'text-gray-900'
+                      item.completed ? 'text-gray-400 line-through' : 'text-white'
                     )}
                   >
                     {item.title}
@@ -241,7 +241,7 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
                   {!item.completed && item.href && (
                     <a
                       href={item.href}
-                      className="mt-2 inline-flex items-center text-xs font-medium text-purple-600 hover:text-purple-700"
+                      className="mt-2 inline-flex items-center text-xs font-medium text-primary hover:text-purple-400"
                     >
                       Get started →
                     </a>
@@ -254,8 +254,8 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
 
         {/* Motivational Message */}
         {progress > 0 && progress < 100 && (
-          <div className="mt-4 rounded-lg bg-purple-100 px-4 py-3">
-            <p className="text-sm font-medium text-purple-900">
+          <div className="mt-4 rounded-lg bg-primary/20 border border-primary/30 px-4 py-3">
+            <p className="text-sm font-medium text-primary">
               {progress >= 75
                 ? "🎉 Almost there! You're doing great!"
                 : progress >= 50

@@ -11,6 +11,7 @@ import {
   Cog6ToothIcon,
   PuzzlePieceIcon,
   QuestionMarkCircleIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { ProductTour } from '@/components/tour/ProductTour';
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
   { name: 'Integrations', href: '/integrations', icon: PuzzlePieceIcon },
   { name: 'Automations', href: '/automations', icon: BoltIcon },
+  { name: 'Intelligence', href: '/intelligence', icon: SparklesIcon },
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
 
@@ -49,7 +51,7 @@ export function Layout({ children }: LayoutProps) {
   }, [router.pathname]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       {/* Sidebar with Purple Gradient */}
       <aside className="fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-[#7C3AED] via-[#6D28D9] to-[#5B21B6] shadow-xl">
         <div className="flex h-full flex-col">
@@ -115,8 +117,8 @@ export function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 min-h-screen bg-gray-50">
-        <div className="px-8 py-6">
+      <main className="ml-64 min-h-screen bg-black">
+        <div className="px-8 py-6 max-h-screen overflow-y-auto">
           {/* Onboarding Checklist - Only shown if not dismissed */}
           <div className="mb-6">
             <OnboardingChecklist />

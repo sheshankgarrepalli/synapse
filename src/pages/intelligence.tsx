@@ -77,6 +77,20 @@ export default function IntelligencePage() {
               <p className="mt-4 text-gray-400">Analyzing your work...</p>
             </CardContent>
           </Card>
+        ) : !feed || (feed.recentItems.length === 0 && feed.recentThreads.length === 0) ? (
+          <EmptyState
+            illustration="intelligence"
+            title="Waiting for your first integration"
+            description="Connect GitHub, Linear, Figma, Slack, or Zoom to start seeing AI-powered insights about your work. Synapse will automatically analyze your data and detect relationships."
+            action={{
+              label: 'Connect Your First Tool',
+              href: '/integrations',
+            }}
+            secondaryAction={{
+              label: 'View Demo',
+              href: '/demo',
+            }}
+          />
         ) : (
           <>
             {/* AI Work Summary */}
@@ -490,23 +504,6 @@ export default function IntelligencePage() {
                   </div>
                 </CardContent>
               </Card>
-            )}
-
-            {/* Empty State */}
-            {feed && feed.recentItems.length === 0 && feed.recentThreads.length === 0 && (
-              <EmptyState
-                illustration="intelligence"
-                title="Waiting for your first integration"
-                description="Connect GitHub, Linear, Figma, Slack, or Zoom to start seeing AI-powered insights about your work. Synapse will automatically analyze your data and detect relationships."
-                action={{
-                  label: 'Connect Your First Tool',
-                  href: '/integrations',
-                }}
-                secondaryAction={{
-                  label: 'View Demo',
-                  href: '/demo',
-                }}
-              />
             )}
           </>
         )}
