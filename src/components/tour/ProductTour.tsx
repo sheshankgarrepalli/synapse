@@ -10,7 +10,7 @@ interface ProductTourProps {
 
 export function ProductTour({ startTour = false, onComplete }: ProductTourProps) {
   const router = useRouter();
-  const [tour, setTour] = useState<Shepherd.Tour | null>(null);
+  const [tour, setTour] = useState<any>(null);
 
   useEffect(() => {
     // Check if user has completed the tour
