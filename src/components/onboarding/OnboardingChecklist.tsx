@@ -29,7 +29,7 @@ export function OnboardingChecklist({ onDismiss }: OnboardingChecklistProps) {
   const { data: integrationsData } = api.integrations.list.useQuery();
 
   // Check completion status
-  const hasConnectedIntegration = (integrationsData?.integrations?.length || 0) > 0 || onboardingStatus?.hasCompletedOnboarding;
+  const hasConnectedIntegration = (integrationsData?.length || 0) > 0 || onboardingStatus?.hasCompletedOnboarding;
   const hasCreatedThread = (threadsData?.threads?.length || 0) > 0;
   const hasInvitedTeamMember = false; // TODO: Add team member check when team functionality is built
   const hasEnabledDriftDetection = onboardingStatus?.hasCompletedOnboarding || false;
