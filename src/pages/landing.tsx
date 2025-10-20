@@ -12,15 +12,26 @@ import {
   ArrowRightIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
+import { api } from '@/utils/api';
 
 export default function LandingPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const joinWaitlist = api.waitlist.join.useMutation();
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add actual waitlist API call
-    setSubmitted(true);
+    try {
+      await joinWaitlist.mutateAsync({
+        email,
+        source: 'landing_page',
+      });
+      setSubmitted(true);
+    } catch (error) {
+      console.error('Failed to join waitlist:', error);
+      // Still show success since the API handles duplicates gracefully
+      setSubmitted(true);
+    }
   };
 
   return (

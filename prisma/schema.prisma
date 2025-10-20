@@ -670,3 +670,19 @@ model DesignCodeLink {
   @@index([isMonitored], map: "idx_design_code_links_monitored")
   @@map("design_code_links")
 }
+
+// ==========================================
+// WAITLIST
+// ==========================================
+
+model WaitlistEntry {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique @db.VarChar(255)
+  source    String   @default("landing_page") @db.VarChar(100)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([email], map: "idx_waitlist_email")
+  @@index([createdAt(sort: Desc)], map: "idx_waitlist_created")
+  @@map("waitlist_entries")
+}

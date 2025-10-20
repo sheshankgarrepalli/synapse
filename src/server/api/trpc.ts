@@ -3,7 +3,7 @@ import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { getAuth } from '@clerk/nextjs/server';
+import { getAuth, clerkClient } from '@clerk/nextjs/server';
 
 /**
  * CREATE CONTEXT
@@ -114,12 +114,26 @@ export const orgProcedure = protectedProcedure.use(async ({ ctx, next }) => {
 
       if (!user) {
         console.log('Creating user record for:', ctx.session.userId);
+
+        // Fetch user data from Clerk
+        let userEmail = 'user@example.com';
+        let userFullName = 'User';
+
+        try {
+          const clerk = await clerkClient();
+          const clerkUser = await clerk.users.getUser(ctx.session.userId);
+          userEmail = clerkUser.emailAddresses[0]?.emailAddress || userEmail;
+          userFullName = clerkUser.fullName || clerkUser.firstName || 'User';
+        } catch (error) {
+          console.error('Failed to fetch Clerk user data:', error);
+        }
+
         user = await ctx.prisma.user.create({
           data: {
             authProviderId: ctx.session.userId,
             organizationId: organization.id,
-            email: 'user@example.com', // This should be updated from Clerk webhook
-            fullName: 'User',
+            email: userEmail,
+            fullName: userFullName,
           },
         });
         console.log('Created user:', user.id);
@@ -154,12 +168,25 @@ export const orgProcedure = protectedProcedure.use(async ({ ctx, next }) => {
       });
 
       if (!user) {
+        // Fetch user data from Clerk
+        let userEmail = 'user@example.com';
+        let userFullName = 'User';
+
+        try {
+          const clerk = await clerkClient();
+          const clerkUser = await clerk.users.getUser(ctx.session.userId);
+          userEmail = clerkUser.emailAddresses[0]?.emailAddress || userEmail;
+          userFullName = clerkUser.fullName || clerkUser.firstName || 'User';
+        } catch (error) {
+          console.error('Failed to fetch Clerk user data:', error);
+        }
+
         user = await ctx.prisma.user.create({
           data: {
             authProviderId: ctx.session.userId,
             organizationId: organization.id,
-            email: 'user@example.com', // This should be updated from Clerk webhook
-            fullName: 'User',
+            email: userEmail,
+            fullName: userFullName,
           },
         });
       }

@@ -289,13 +289,54 @@ function colorsMatch(color1: string, color2: string): boolean {
 }
 
 function normalizeColorToHex(color: string): string {
-  // Simple normalization - you can expand this
+  // Already hex color
   if (color.startsWith('#')) {
+    // Expand 3-digit hex to 6-digit (#fff -> #ffffff)
+    if (color.length === 4) {
+      const r = color[1];
+      const g = color[2];
+      const b = color[3];
+      return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+    }
     return color.toLowerCase();
   }
-  // Handle rgb(255, 255, 255) -> #ffffff
-  // TODO: Implement RGB to hex conversion
-  return color;
+
+  // Handle rgb(255, 255, 255) or rgba(255, 255, 255, 1)
+  const rgbMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+  if (rgbMatch) {
+    const r = parseInt(rgbMatch[1]);
+    const g = parseInt(rgbMatch[2]);
+    const b = parseInt(rgbMatch[3]);
+
+    // Convert to hex
+    const toHex = (n: number) => {
+      const hex = n.toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    };
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toLowerCase();
+  }
+
+  // Handle named colors (basic support)
+  const namedColors: Record<string, string> = {
+    'white': '#ffffff',
+    'black': '#000000',
+    'red': '#ff0000',
+    'green': '#00ff00',
+    'blue': '#0000ff',
+    'yellow': '#ffff00',
+    'cyan': '#00ffff',
+    'magenta': '#ff00ff',
+    'transparent': '#00000000',
+  };
+
+  const lowerColor = color.toLowerCase();
+  if (namedColors[lowerColor]) {
+    return namedColors[lowerColor];
+  }
+
+  // Fallback: return as-is
+  return color.toLowerCase();
 }
 
 /**

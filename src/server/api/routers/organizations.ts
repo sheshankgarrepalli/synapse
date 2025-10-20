@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, orgProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import { slugify } from '@/lib/utils';
+import { clerkClient } from '@clerk/nextjs/server';
 
 export const organizationsRouter = createTRPCRouter({
   /**
@@ -57,12 +58,25 @@ export const organizationsRouter = createTRPCRouter({
         },
       });
 
-      // Create owner user
+      // Create owner user with Clerk data
+      let userEmail = 'user@example.com';
+      let userFullName = 'User';
+
+      try {
+        const clerk = await clerkClient();
+        const clerkUser = await clerk.users.getUser(ctx.session.userId);
+        userEmail = clerkUser.emailAddresses[0]?.emailAddress || userEmail;
+        userFullName = clerkUser.fullName || clerkUser.firstName || 'User';
+      } catch (error) {
+        console.error('Failed to fetch Clerk user data:', error);
+      }
+
       await ctx.prisma.user.create({
         data: {
           organizationId: organization.id,
           authProviderId: ctx.session.userId,
-          email: '', // TODO: Get from auth provider
+          email: userEmail,
+          fullName: userFullName,
           role: 'owner',
         },
       });

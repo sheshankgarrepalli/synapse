@@ -11,6 +11,7 @@ import { intelligenceRouter } from './routers/intelligence';
 import { settingsRouter } from './routers/settings';
 import { driftRouter } from './routers/drift';
 import { onboardingRouter } from './routers/onboarding';
+import { waitlistRouter } from './routers/waitlist';
 
 /**
  * This is the primary router for your server.
@@ -30,6 +31,7 @@ export const appRouter = createTRPCRouter({
   settings: settingsRouter, // ⚙️ Organization and user settings
   drift: driftRouter, // 🎨 Design-code drift detection
   onboarding: onboardingRouter, // 👋 User onboarding flow
+  waitlist: waitlistRouter, // 📝 Landing page waitlist
 });
 
 // export type definition of API
