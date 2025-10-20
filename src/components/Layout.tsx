@@ -15,6 +15,8 @@ import {
 } from '@heroicons/react/24/outline';
 import { OnboardingChecklist } from '@/components/onboarding/OnboardingChecklist';
 import { ProductTour } from '@/components/tour/ProductTour';
+import { CommandPalette } from '@/components/CommandPalette';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 
 interface LayoutProps {
   children: ReactNode;
@@ -33,6 +35,17 @@ const navigation = [
 export function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const [startTour, setStartTour] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isCreateThreadModalOpen, setIsCreateThreadModalOpen] = useState(false);
+  const [isIntegrationModalOpen, setIsIntegrationModalOpen] = useState(false);
+
+  // Command Palette keyboard shortcut (Cmd+K on Mac, Ctrl+K on Windows/Linux)
+  useKeyboardShortcut(
+    { key: 'k', metaKey: true },
+    () => {
+      setIsCommandPaletteOpen((prev) => !prev);
+    }
+  );
 
   // Auto-start tour for first-time users on dashboard
   useEffect(() => {
@@ -69,6 +82,22 @@ export function Layout({ children }: LayoutProps) {
           <nav className="flex-1 space-y-1 px-3 py-6">
             {navigation.map((item) => {
               const isActive = router.pathname.startsWith(item.href);
+
+              // Handle Search differently - open command palette
+              if (item.name === 'Search') {
+                return (
+                  <button
+                    key={item.name}
+                    onClick={() => setIsCommandPaletteOpen(true)}
+                    className="flex w-full items-center space-x-3 rounded-xl px-4 py-3 text-sm font-medium text-white/70 transition-all hover:bg-white/10 hover:text-white"
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                    <span className="ml-auto text-xs text-white/50">⌘K</span>
+                  </button>
+                );
+              }
+
               return (
                 <Link
                   key={item.name}
@@ -129,6 +158,14 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Product Tour */}
       <ProductTour startTour={startTour} onComplete={() => setStartTour(false)} />
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        setIsCreateThreadModalOpen={setIsCreateThreadModalOpen}
+        setIsIntegrationModalOpen={setIsIntegrationModalOpen}
+      />
     </div>
   );
 }

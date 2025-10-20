@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { EmptyStateWithTemplates, Template } from '@/components/EmptyStateWithTemplates';
+import { IntegrationPrompt } from '@/components/IntegrationPrompt';
 import { api } from '@/utils/api';
 import { formatRelativeTime, getStatusColor } from '@/lib/utils';
+import { shouldShowIntegrationPrompt, type IntegrationType } from '@/lib/integrations/recommendations';
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -24,6 +27,7 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'planning' | 'in_progress' | 'review' | 'completed' | 'archived'>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [integrationPromptDismissed, setIntegrationPromptDismissed] = useState(false);
 
   // Fetch threads
   const { data: threadsData, isLoading } = api.threads.list.useQuery({
@@ -34,6 +38,27 @@ export default function Dashboard() {
 
   // Fetch analytics
   const { data: analytics } = api.analytics.getDashboard.useQuery();
+
+  // Mock user integrations for now - TODO: fetch from API
+  const userIntegrations: IntegrationType[] = ['linear']; // Example: user has only Linear connected
+  const threadCount = threadsData?.threads.length || 0;
+
+  // Determine if we should show integration prompt
+  const showIntegrationPrompt =
+    !integrationPromptDismissed &&
+    shouldShowIntegrationPrompt(userIntegrations, threadCount);
+
+  const handleConnectIntegration = (integration: IntegrationType) => {
+    // TODO: Trigger OAuth flow for integration
+    console.log('Connecting integration:', integration);
+    // For now, just dismiss the prompt
+    setIntegrationPromptDismissed(true);
+  };
+
+  const handleDismissPrompt = () => {
+    setIntegrationPromptDismissed(true);
+    // TODO: Store dismissal in localStorage or user preferences with timestamp
+  };
 
   return (
     <Layout>
@@ -133,6 +158,15 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Integration Prompt (shown when conditions are met) */}
+        {showIntegrationPrompt && (
+          <IntegrationPrompt
+            userIntegrations={userIntegrations}
+            onConnect={handleConnectIntegration}
+            onDismiss={handleDismissPrompt}
+          />
+        )}
+
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
@@ -163,20 +197,14 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           ) : threadsData?.threads.length === 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="py-12 text-center">
-                  <h3 className="text-lg font-medium text-white">No threads found</h3>
-                  <p className="mt-2 text-sm text-gray-400">
-                    Get started by creating your first Golden Thread
-                  </p>
-                  <Button className="mt-4" onClick={() => setIsCreateModalOpen(true)}>
-                    <PlusIcon className="mr-2 h-5 w-5" />
-                    Create Thread
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <EmptyStateWithTemplates
+              onCreateFromTemplate={(template: Template) => {
+                // Pre-populate the create modal with template data
+                setIsCreateModalOpen(true);
+                // TODO: Pass template data to modal to pre-fill
+              }}
+              onCreateBlank={() => setIsCreateModalOpen(true)}
+            />
           ) : (
             threadsData?.threads.map((thread) => (
               <Link key={thread.id} href={`/threads/${thread.id}`}>

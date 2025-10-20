@@ -99,6 +99,7 @@ model User {
   addedCollaborators   ThreadCollaborator[] @relation("CollaboratorAdder")
   resolvedDrifts       DesignCodeDrift[]
   createdDesignCodeLinks DesignCodeLink[]
+  digestLogs           DigestLog[]
 
   @@index([organizationId], map: "idx_users_org")
   @@index([email], map: "idx_users_email")
@@ -685,4 +686,43 @@ model WaitlistEntry {
   @@index([email], map: "idx_waitlist_email")
   @@index([createdAt(sort: Desc)], map: "idx_waitlist_created")
   @@map("waitlist_entries")
+}
+
+// ==========================================
+// DAILY DIGEST EMAIL TRACKING
+// ==========================================
+
+model DigestLog {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  // Digest Info
+  digestDate  DateTime @map("digest_date") @db.Timestamptz(6) // Date the digest was for
+  sentAt      DateTime @default(now()) @map("sent_at") @db.Timestamptz(6)
+
+  // Content Summary
+  alertsCount    Int @default(0) @map("alerts_count")
+  warningsCount  Int @default(0) @map("warnings_count")
+  goodNewsCount  Int @default(0) @map("good_news_count")
+  threadsCount   Int @default(0) @map("threads_count")
+
+  // Delivery Status
+  status       String  @db.VarChar(50) // "sent", "failed", "bounced"
+  emailId      String? @map("email_id") @db.VarChar(255) // Email provider ID (e.g., Resend ID)
+  errorMessage String? @map("error_message")
+
+  // Engagement Tracking
+  opened     Boolean   @default(false)
+  openedAt   DateTime? @map("opened_at") @db.Timestamptz(6)
+  clicked    Boolean   @default(false)
+  clickedAt  DateTime? @map("clicked_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_digest_log_user")
+  @@index([digestDate(sort: Desc)], map: "idx_digest_log_date")
+  @@index([status], map: "idx_digest_log_status")
+  @@index([sentAt(sort: Desc)], map: "idx_digest_log_sent")
+  @@map("digest_logs")
 }
