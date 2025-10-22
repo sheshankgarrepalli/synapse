@@ -18,12 +18,14 @@ import {
 import Image from 'next/image';
 
 const integrations = [
+  // Tier 1: Core Integrations - Project Management
   {
     id: 'github',
     name: 'GitHub',
     description: 'Connect repositories, issues, and pull requests',
     icon: '/integrations/github.svg',
     tier: 1,
+    category: 'Version Control',
     features: ['Repositories', 'Issues', 'Pull Requests', 'Commits'],
   },
   {
@@ -32,6 +34,7 @@ const integrations = [
     description: 'Link channels and messages to your threads',
     icon: '/integrations/slack.svg',
     tier: 1,
+    category: 'Communication',
     features: ['Channels', 'Messages', 'Threads', 'Files'],
   },
   {
@@ -40,14 +43,80 @@ const integrations = [
     description: 'Sync projects, issues, and workflows',
     icon: '/integrations/linear.svg',
     tier: 1,
+    category: 'Project Management',
     features: ['Projects', 'Issues', 'Cycles', 'Labels'],
   },
+  {
+    id: 'jira',
+    name: 'Jira',
+    description: 'Connect Jira projects, issues, and sprints',
+    icon: '/integrations/jira.svg',
+    tier: 1,
+    category: 'Project Management',
+    features: ['Projects', 'Issues', 'Sprints', 'Workflows'],
+  },
+  {
+    id: 'asana',
+    name: 'Asana',
+    description: 'Sync tasks, projects, and team workflows',
+    icon: '/integrations/asana.svg',
+    tier: 1,
+    category: 'Project Management',
+    features: ['Tasks', 'Projects', 'Sections', 'Tags'],
+  },
+  {
+    id: 'trello',
+    name: 'Trello',
+    description: 'Connect boards, lists, and cards',
+    icon: '/integrations/trello.svg',
+    tier: 1,
+    category: 'Project Management',
+    features: ['Boards', 'Lists', 'Cards', 'Labels'],
+  },
+  {
+    id: 'microsoft-teams',
+    name: 'Microsoft Teams',
+    description: 'Connect teams, channels, and messages',
+    icon: '/integrations/microsoft-teams.svg',
+    tier: 1,
+    category: 'Communication',
+    features: ['Teams', 'Channels', 'Messages', 'Files'],
+  },
+  {
+    id: 'discord',
+    name: 'Discord',
+    description: 'Link servers, channels, and messages',
+    icon: '/integrations/discord.svg',
+    tier: 1,
+    category: 'Communication',
+    features: ['Servers', 'Channels', 'Messages', 'Threads'],
+  },
+  {
+    id: 'gitlab',
+    name: 'GitLab',
+    description: 'Connect repositories, merge requests, and pipelines',
+    icon: '/integrations/gitlab.svg',
+    tier: 1,
+    category: 'Version Control',
+    features: ['Repositories', 'Merge Requests', 'Pipelines', 'Issues'],
+  },
+  {
+    id: 'bitbucket',
+    name: 'Bitbucket',
+    description: 'Sync repositories, pull requests, and pipelines',
+    icon: '/integrations/bitbucket.svg',
+    tier: 1,
+    category: 'Version Control',
+    features: ['Repositories', 'Pull Requests', 'Pipelines', 'Issues'],
+  },
+  // Tier 2: Design & Documentation
   {
     id: 'figma',
     name: 'Figma',
     description: 'Connect design files and components',
     icon: '/integrations/figma.svg',
     tier: 2,
+    category: 'Design Tools',
     features: ['Files', 'Components', 'Comments', 'Versions'],
   },
   {
@@ -56,14 +125,89 @@ const integrations = [
     description: 'Link pages and databases',
     icon: '/integrations/notion.svg',
     tier: 2,
+    category: 'Documentation',
     features: ['Pages', 'Databases', 'Blocks', 'Comments'],
   },
+  {
+    id: 'confluence',
+    name: 'Confluence',
+    description: 'Connect spaces, pages, and documentation',
+    icon: '/integrations/confluence.svg',
+    tier: 2,
+    category: 'Documentation',
+    features: ['Spaces', 'Pages', 'Comments', 'Attachments'],
+  },
+  {
+    id: 'google-drive',
+    name: 'Google Drive',
+    description: 'Link files, folders, and documents',
+    icon: '/integrations/google-drive.svg',
+    tier: 2,
+    category: 'Documentation',
+    features: ['Files', 'Folders', 'Docs', 'Sheets'],
+  },
+  {
+    id: 'dropbox',
+    name: 'Dropbox',
+    description: 'Connect files and folders',
+    icon: '/integrations/dropbox.svg',
+    tier: 2,
+    category: 'Documentation',
+    features: ['Files', 'Folders', 'Paper', 'Sharing'],
+  },
+  {
+    id: 'miro',
+    name: 'Miro',
+    description: 'Sync boards and collaborative workspaces',
+    icon: '/integrations/miro.svg',
+    tier: 2,
+    category: 'Design Tools',
+    features: ['Boards', 'Frames', 'Widgets', 'Comments'],
+  },
+  {
+    id: 'sketch',
+    name: 'Sketch',
+    description: 'Connect design documents and libraries',
+    icon: '/integrations/sketch.svg',
+    tier: 2,
+    category: 'Design Tools',
+    features: ['Documents', 'Libraries', 'Artboards', 'Symbols'],
+  },
+  {
+    id: 'google-analytics',
+    name: 'Google Analytics',
+    description: 'Connect analytics data and reports',
+    icon: '/integrations/google-analytics.svg',
+    tier: 2,
+    category: 'Analytics',
+    features: ['Properties', 'Reports', 'Events', 'Goals'],
+  },
+  {
+    id: 'amplitude',
+    name: 'Amplitude',
+    description: 'Link product analytics and insights',
+    icon: '/integrations/amplitude.svg',
+    tier: 2,
+    category: 'Analytics',
+    features: ['Events', 'Charts', 'Cohorts', 'Dashboards'],
+  },
+  {
+    id: 'sentry',
+    name: 'Sentry',
+    description: 'Connect error tracking and monitoring',
+    icon: '/integrations/sentry.svg',
+    tier: 2,
+    category: 'Error Tracking',
+    features: ['Errors', 'Issues', 'Releases', 'Performance'],
+  },
+  // Tier 3: Analytics & Research
   {
     id: 'zoom',
     name: 'Zoom',
     description: 'Connect meetings and recordings',
     icon: '/integrations/zoom.svg',
     tier: 3,
+    category: 'Communication',
     features: ['Meetings', 'Recordings', 'Transcripts'],
   },
   {
@@ -72,6 +216,7 @@ const integrations = [
     description: 'Link research insights and highlights',
     icon: '/integrations/dovetail.svg',
     tier: 3,
+    category: 'Research',
     features: ['Projects', 'Insights', 'Highlights', 'Tags'],
   },
   {
@@ -80,6 +225,7 @@ const integrations = [
     description: 'Connect analytics events and insights',
     icon: '/integrations/mixpanel.svg',
     tier: 3,
+    category: 'Analytics',
     features: ['Events', 'Funnels', 'Cohorts', 'Reports'],
   },
 ];
@@ -348,9 +494,9 @@ export default function IntegrationsPage() {
           </div>
         </div>
 
-        {/* Tier 2: Design & Documentation */}
+        {/* Tier 2: Enhanced Integrations */}
         <div>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Design & Documentation</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Enhanced Integrations</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 2)
@@ -434,9 +580,9 @@ export default function IntegrationsPage() {
           </div>
         </div>
 
-        {/* Tier 3: Analytics & Research */}
+        {/* Tier 3: Specialized Tools */}
         <div>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Analytics & Research</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Specialized Tools</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 3)
