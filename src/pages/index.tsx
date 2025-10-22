@@ -1,8 +1,24 @@
 import { SignIn, SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 export default function Home() {
+  const router = useRouter();
+
+  // Redirect to dashboard if user is signed in
+  useEffect(() => {
+    const checkAuth = async () => {
+      // Check if user is signed in by looking for Clerk session
+      const signedIn = document.querySelector('[data-clerk-signed-in]');
+      if (signedIn) {
+        router.push('/dashboard');
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   return (
     <>
       <Head>
@@ -26,7 +42,7 @@ export default function Home() {
                   Enterprise Integration Platform for Design & Product Teams
                 </p>
               </div>
-              <SignIn routing="hash" />
+              <SignIn routing="hash" afterSignInUrl="/dashboard" />
             </div>
           </SignedOut>
 
@@ -129,6 +145,12 @@ export default function Home() {
                   Manage your organization and preferences
                 </p>
               </Link>
+            </div>
+            {/* Redirecting to dashboard... */}
+            <div className="flex min-h-screen items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-white">Redirecting to dashboard...</h2>
+              </div>
             </div>
           </SignedIn>
         </div>

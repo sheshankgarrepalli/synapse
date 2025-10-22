@@ -12,15 +12,15 @@ export function TopBar({ theme, onToggleTheme }: TopBarProps) {
   const { user } = useUser();
 
   const getThemeIcon = () => {
-    if (theme === 'dark') return <Sun className="w-5 h-5" />;
-    if (theme === 'minimal') return <Moon className="w-5 h-5" />;
+    if (theme === 'light') return <Sun className="w-5 h-5" />;
+    if (theme === 'dark') return <Moon className="w-5 h-5" />;
     return <Minimize2 className="w-5 h-5" />;
   };
 
   const getThemeLabel = () => {
-    if (theme === 'light') return 'Light theme';
-    if (theme === 'dark') return 'Dark theme';
-    return 'Minimal theme';
+    if (theme === 'light') return 'Switch to Dark theme';
+    if (theme === 'dark') return 'Switch to Minimal theme';
+    return 'Switch to Light theme';
   };
 
   return (
