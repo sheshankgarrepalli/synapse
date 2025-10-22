@@ -1,19 +1,41 @@
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
-import { Card, CardContent } from '@/components/ui/Card';
+import { useRouter } from 'next/router';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select, SelectOption } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
-import { Modal } from '@/components/ui/Modal';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalClose } from '@/components/ui/Modal';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { SkeletonThread } from '@/components/ui/Skeleton';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+  useSortableTable,
+  Pagination
+} from '@/components/ui/Table';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuDivider
+} from '@/components/ui/DropdownMenu';
 import { api } from '@/utils/api';
-import { formatRelativeTime, getStatusColor } from '@/lib/utils';
-import { PlusIcon } from '@heroicons/react/24/outline';
-import Link from 'next/link';
+import { formatRelativeTime } from '@/lib/utils';
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  EllipsisVerticalIcon,
+  PencilIcon,
+  DocumentDuplicateIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline';
 
-const statusOptions: SelectOption[] = [
+const statusOptions = [
   { value: 'all', label: 'All Statuses' },
   { value: 'planning', label: 'Planning' },
   { value: 'in_progress', label: 'In Progress' },
@@ -22,123 +44,275 @@ const statusOptions: SelectOption[] = [
   { value: 'archived', label: 'Archived' },
 ];
 
+// Mock integration icons - in real implementation, these would be based on actual integrations
+const getIntegrationIcons = (thread: any) => {
+  const icons = ['🎨', '📋', '💻', '💬'];
+  const count = Math.min(thread._count?.connectedItems || 0, 4);
+  return icons.slice(0, count);
+};
+
+const getStatusBadgeVariant = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'success';
+    case 'in_progress':
+    case 'review':
+      return 'primary';
+    case 'planning':
+      return 'warning';
+    case 'archived':
+      return 'default';
+    default:
+      return 'default';
+  }
+};
+
 export default function ThreadsPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'planning' | 'in_progress' | 'review' | 'completed' | 'archived'>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: threadsData, isLoading } = api.threads.list.useQuery({
-    limit: 50,
+    limit: 100,
     search: searchQuery || undefined,
-    status: statusFilter !== 'all' ? statusFilter : undefined,
+    status: statusFilter !== 'all' ? (statusFilter as 'planning' | 'in_progress' | 'review' | 'completed' | 'archived') : undefined,
   });
 
+  const threads = threadsData?.threads || [];
+
+  // Sort functionality
+  const { sortedItems, requestSort, getSortDirection } = useSortableTable(threads, {
+    key: 'updatedAt',
+    direction: 'desc'
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedItems.length / itemsPerPage);
+  const paginatedThreads = sortedItems.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleRowClick = (threadId: string) => {
+    router.push(`/threads/${threadId}`);
+  };
+
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Page Header */}
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Golden Threads</h1>
-            <p className="mt-1 text-gray-400">Connect and track work across all your tools</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">
+              Threads
+            </h1>
+            <p className="text-gray-500 dark:text-[#FDFFFC]/60">
+              Connect and track work across all your tools
+            </p>
           </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <PlusIcon className="mr-2 h-5 w-5" />
+          <Button onClick={() => setIsCreateModalOpen(true)} leftIcon={<PlusIcon className="h-5 w-5" />}>
             New Thread
           </Button>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input
-                placeholder="Search threads..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Select
-                value={statusFilter}
-                onChange={(value) => setStatusFilter(value as typeof statusFilter)}
-                options={statusOptions}
-                placeholder="Filter by status"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Threads Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {isLoading ? (
-            <>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <SkeletonThread key={i} />
+        {/* Filters Bar */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <Input
+              placeholder="Search threads..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              leftIcon={<MagnifyingGlassIcon className="h-5 w-5" />}
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" rightIcon={<FunnelIcon className="h-5 w-5" />}>
+                Filters
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {statusOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => {
+                    setStatusFilter(option.value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  {option.label}
+                  {statusFilter === option.value && ' ✓'}
+                </DropdownMenuItem>
               ))}
-            </>
-          ) : threadsData?.threads.length === 0 ? (
-            <div className="col-span-full">
-              <EmptyState
-                illustration="threads"
-                title={searchQuery || statusFilter !== 'all' ? 'No threads found' : 'No Golden Threads yet'}
-                description={
-                  searchQuery || statusFilter !== 'all'
-                    ? 'Try adjusting your search or filter to find what you\'re looking for.'
-                    : 'Golden Threads help you connect and track related work items across all your tools. Create your first thread to get started!'
-                }
-                action={{
-                  label: 'Create Thread',
-                  onClick: () => setIsCreateModalOpen(true),
-                }}
-                secondaryAction={
-                  searchQuery || statusFilter !== 'all'
-                    ? {
-                        label: 'Clear Filters',
-                        onClick: () => {
-                          setSearchQuery('');
-                          setStatusFilter('all');
-                        },
-                      }
-                    : {
-                        label: 'Learn More',
-                        href: '/demo',
-                      }
-                }
-              />
-            </div>
-          ) : (
-            threadsData?.threads.map((thread) => (
-              <Link key={thread.id} href={`/threads/${thread.id}`}>
-                <Card hover className="h-full">
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      <div className="flex items-start justify-between">
-                        <h3 className="text-lg font-semibold text-white line-clamp-2">{thread.title}</h3>
-                        <div className={`ml-2 h-3 w-3 flex-shrink-0 rounded-full ${getStatusColor(thread.status)}`} />
-                      </div>
-
-                      {thread.description && (
-                        <p className="text-sm text-gray-400 line-clamp-3">{thread.description}</p>
-                      )}
-
-                      <div className="space-y-2">
-                        <Badge variant={thread.status === 'completed' ? 'success' : 'primary'}>
-                          {thread.status.replace('_', ' ')}
-                        </Badge>
-
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>Updated {formatRelativeTime(new Date(thread.updatedAt))}</span>
-                          {thread._count?.connectedItems > 0 && (
-                            <span>{thread._count.connectedItems} items</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
+        {/* Table View */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          </div>
+        ) : paginatedThreads.length === 0 ? (
+          <EmptyState
+            illustration="threads"
+            title={searchQuery || statusFilter !== 'all' ? 'No threads found' : 'No Golden Threads yet'}
+            description={
+              searchQuery || statusFilter !== 'all'
+                ? "Try adjusting your search or filter to find what you're looking for."
+                : 'Golden Threads help you connect and track related work items across all your tools. Create your first thread to get started!'
+            }
+            action={{
+              label: 'Create Thread',
+              onClick: () => setIsCreateModalOpen(true),
+            }}
+            secondaryAction={
+              searchQuery || statusFilter !== 'all'
+                ? {
+                    label: 'Clear Filters',
+                    onClick: () => {
+                      setSearchQuery('');
+                      setStatusFilter('all');
+                    },
+                  }
+                : {
+                    label: 'Learn More',
+                    href: '/demo',
+                  }
+            }
+          />
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead
+                    sortable
+                    sorted={getSortDirection('title')}
+                    onSort={() => requestSort('title')}
+                  >
+                    Name
+                  </TableHead>
+                  <TableHead
+                    sortable
+                    sorted={getSortDirection('status')}
+                    onSort={() => requestSort('status')}
+                  >
+                    Status
+                  </TableHead>
+                  <TableHead>Connected Tools</TableHead>
+                  <TableHead
+                    sortable
+                    sorted={getSortDirection('updatedAt')}
+                    onSort={() => requestSort('updatedAt')}
+                  >
+                    Last Update
+                  </TableHead>
+                  <TableHead> </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedThreads.map((thread) => (
+                  <TableRow
+                    key={thread.id}
+                    onClick={() => handleRowClick(thread.id)}
+                  >
+                    <TableCell className="font-medium">
+                      {thread.title}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(thread.status)}>
+                        {thread.status.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {getIntegrationIcons(thread).map((icon, idx) => (
+                          <span key={idx} className="text-xl" title="Integration">
+                            {icon}
+                          </span>
+                        ))}
+                        {thread._count?.connectedItems > 4 && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                            +{thread._count.connectedItems - 4}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span>{formatRelativeTime(new Date(thread.updatedAt))}</span>
+                        {thread._count?.connectedItems > 0 && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            {thread._count.connectedItems} {thread._count.connectedItems === 1 ? 'item' : 'items'}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                          >
+                            <EllipsisVerticalIcon className="h-5 w-5 text-gray-500" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="right">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              router.push(`/threads/${thread.id}`);
+                            }}
+                            icon={<PencilIcon className="h-5 w-5" />}
+                          >
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // TODO: Implement duplicate
+                            }}
+                            icon={<DocumentDuplicateIcon className="h-5 w-5" />}
+                          >
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuDivider />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              // TODO: Implement delete
+                            }}
+                            variant="danger"
+                            icon={<TrashIcon className="h-5 w-5" />}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {(currentPage - 1) * itemsPerPage + 1}-
+                  {Math.min(currentPage * itemsPerPage, sortedItems.length)} of {sortedItems.length} threads
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Create Thread Modal */}
@@ -146,7 +320,7 @@ export default function ThreadsPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
-    </Layout>
+    </AppLayout>
   );
 }
 
@@ -177,44 +351,56 @@ function CreateThreadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Create Golden Thread"
-      description="Create a new thread to connect items across your tools"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter thread title..."
-          required
-        />
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-300">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter thread description..."
-            className="flex min-h-[100px] w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalHeader>
+        <div className="flex-1">
+          <ModalTitle>Create Golden Thread</ModalTitle>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Create a new thread to connect items across your tools
+          </p>
+        </div>
+        <ModalClose onClose={onClose} />
+      </ModalHeader>
+      <ModalBody>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter thread title..."
+            required
           />
-        </div>
-        <Select
-          label="Status"
-          value={status}
-          onChange={(value) => setStatus(value as typeof status)}
-          options={statusOptions.filter(opt => opt.value !== 'all')}
-        />
-        <div className="flex justify-end space-x-3">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={createThread.isLoading} disabled={!title}>
-            Create Thread
-          </Button>
-        </div>
-      </form>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-foreground">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter thread description..."
+              className="flex min-h-[100px] w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-foreground">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as typeof status)}
+              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              {statusOptions.filter(opt => opt.value !== 'all').map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={createThread.isLoading} disabled={!title}>
+              Create Thread
+            </Button>
+          </div>
+        </form>
+      </ModalBody>
     </Modal>
   );
 }

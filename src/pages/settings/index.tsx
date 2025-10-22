@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -23,16 +23,16 @@ export default function SettingsPage() {
   ] as const;
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-          <p className="mt-1 text-gray-400">Manage your account and preferences</p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">Settings</h1>
+          <p className="text-gray-500 dark:text-[#FDFFFC]/60">Manage your account and preferences</p>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-gray-800">
+        <div className="border-b border-gray-200 dark:border-[#2EC4B6]/20">
           <nav className="-mb-px flex space-x-8">
             {tabs.map((tab) => (
               <button
@@ -40,8 +40,8 @@ export default function SettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`border-b-2 pb-4 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'border-primary text-white'
-                    : 'border-transparent text-gray-400 hover:border-gray-700 hover:text-gray-300'
+                    ? 'border-[#FCA311] dark:border-[#FF9F1C] text-gray-900 dark:text-[#FDFFFC]'
+                    : 'border-transparent text-gray-500 dark:text-[#FDFFFC]/60 hover:border-gray-300 dark:hover:border-[#2EC4B6]/50 hover:text-gray-700 dark:hover:text-[#FDFFFC]'
                 }`}
               >
                 {tab.label}
@@ -56,7 +56,7 @@ export default function SettingsPage() {
         {activeTab === 'billing' && <BillingSettings orgData={orgData} />}
         {activeTab === 'danger' && <DangerZone />}
       </div>
-    </Layout>
+    </AppLayout>
   );
 }
 

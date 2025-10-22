@@ -1,28 +1,35 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useOrganization } from '@clerk/nextjs';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select, SelectOption } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
-import { Modal } from '@/components/ui/Modal';
+import { Modal, ModalHeader, ModalTitle, ModalBody, ModalClose } from '@/components/ui/Modal';
 import { api } from '@/utils/api';
-import { formatRelativeTime, getStatusColor } from '@/lib/utils';
+import { formatRelativeTime } from '@/lib/utils';
 import { useRealtimeThread } from '@/hooks/use-realtime-thread';
 import { usePresence } from '@/hooks/use-presence';
 import { useRealtimeComments } from '@/hooks/use-realtime-comments';
 import { useRealtimeActivity } from '@/hooks/use-realtime-activity';
 import {
+  ArrowLeftIcon,
   PencilIcon,
   TrashIcon,
   PlusIcon,
-  LinkIcon,
+  ArrowTopRightOnSquareIcon,
   ChatBubbleLeftIcon,
   UserGroupIcon,
 } from '@heroicons/react/24/outline';
+import {
+  ThreadTimeline,
+  ThreadConnections,
+  ThreadFlowDiagram,
+  ThreadStatus,
+} from '@/components/visualization';
 
 const statusOptions: SelectOption[] = [
   { value: 'planning', label: 'Planning' },
@@ -144,24 +151,24 @@ export default function ThreadDetailPage() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <AppLayout>
         <div className="flex items-center justify-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
         </div>
-      </Layout>
+      </AppLayout>
     );
   }
 
   if (!displayThread && !isLoading) {
     return (
-      <Layout>
+      <AppLayout>
         <div className="py-12 text-center">
-          <h3 className="text-lg font-medium text-white">Thread not found</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-[#FDFFFC]">Thread not found</h3>
           <Button className="mt-4" onClick={() => router.push('/threads')}>
             Back to Threads
           </Button>
         </div>
-      </Layout>
+      </AppLayout>
     );
   }
 
@@ -169,124 +176,248 @@ export default function ThreadDetailPage() {
     return null;
   }
 
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'success';
+      case 'in_progress':
+      case 'review':
+        return 'primary';
+      case 'planning':
+        return 'warning';
+      case 'archived':
+        return 'default';
+      default:
+        return 'default';
+    }
+  };
+
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center space-x-3">
-              <h1 className="text-3xl font-bold text-white">{displayThread.title}</h1>
-              <div className={`h-4 w-4 rounded-full ${getStatusColor(displayThread.status)}`} />
-            </div>
-            {displayThread.description && (
-              <p className="mt-2 text-gray-400">{displayThread.description}</p>
-            )}
-            <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
-              <span>Created {formatRelativeTime(new Date(displayThread.createdAt))}</span>
-              <span>Updated {formatRelativeTime(new Date(displayThread.updatedAt))}</span>
-              {viewers.length > 0 && (
-                <div className="flex items-center space-x-2">
-                  <UserGroupIcon className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-400">{viewers.length} viewing</span>
-                  <div className="flex -space-x-2">
-                    {viewers.slice(0, 3).map((viewer) => (
-                      <div
-                        key={viewer.id}
-                        className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-900 bg-primary text-xs font-medium text-white"
-                        title={viewer.name}
-                      >
-                        {viewer.name.charAt(0).toUpperCase()}
-                      </div>
-                    ))}
-                    {viewers.length > 3 && (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-gray-900 bg-gray-700 text-xs font-medium text-white">
-                        +{viewers.length - 3}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Back Navigation */}
+        <Button
+          variant="ghost"
+          leftIcon={<ArrowLeftIcon className="h-5 w-5" />}
+          onClick={() => router.push('/threads')}
+          className="mb-6 text-gray-600 dark:text-[#FDFFFC]/60 hover:text-gray-900 dark:hover:text-[#FDFFFC]"
+        >
+          Back to Threads
+        </Button>
+
+        {/* Thread Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC]">
+              {displayThread.title}
+            </h1>
+            <Button
+              variant="outline"
+              leftIcon={<PencilIcon className="h-5 w-5" />}
+              onClick={() => setIsEditModalOpen(true)}
+            >
+              Edit
+            </Button>
           </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
-              <PencilIcon className="h-4 w-4" />
-            </Button>
-            <Button variant="danger" size="sm" onClick={() => setIsDeleteModalOpen(true)}>
-              <TrashIcon className="h-4 w-4" />
-            </Button>
+          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-[#FDFFFC]/60">
+            <Badge variant={getStatusBadgeVariant(displayThread.status)}>
+              {displayThread.status.replace('_', ' ')}
+            </Badge>
+            <span>Owner: User</span>
+            <span>Created {formatRelativeTime(new Date(displayThread.createdAt))}</span>
+            {viewers.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <UserGroupIcon className="h-4 w-4" />
+                <span>{viewers.length} viewing</span>
+                <div className="flex -space-x-2">
+                  {viewers.slice(0, 3).map((viewer) => (
+                    <div
+                      key={viewer.id}
+                      className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary text-xs font-medium text-white"
+                      title={viewer.name}
+                    >
+                      {viewer.name.charAt(0).toUpperCase()}
+                    </div>
+                  ))}
+                  {viewers.length > 3 && (
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-gray-700 text-xs font-medium text-white">
+                      +{viewers.length - 3}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          {displayThread.description && (
+            <p className="mt-3 text-gray-500 dark:text-[#FDFFFC]/60">{displayThread.description}</p>
+          )}
+        </div>
+
+        {/* Connected Tools Grid */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-6">
+            Connected Tools
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {items && items.length > 0 ? (
+              items.map((item) => {
+                const integrationIcon = {
+                  figma: '🎨',
+                  linear: '📋',
+                  github: '💻',
+                  slack: '💬'
+                }[item.integrationType] || '🔗';
+
+                return (
+                  <Card key={item.id} hover>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">{integrationIcon}</span>
+                        <span>{item.integrationType.charAt(0).toUpperCase() + item.integrationType.slice(1)}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {item.itemType || 'Item'}: {item.title || 'Untitled'}
+                      </p>
+                      <Badge variant="primary" size="sm">
+                        Active
+                      </Badge>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        Updated: {formatRelativeTime(new Date(item.updatedAt))}
+                      </p>
+                      {item.externalUrl && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="mt-3 w-full justify-between"
+                          rightIcon={<ArrowTopRightOnSquareIcon className="h-4 w-4" />}
+                          onClick={() => window.open(item.externalUrl!, '_blank')}
+                        >
+                          Open in {item.integrationType.charAt(0).toUpperCase() + item.integrationType.slice(1)}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">No connected items yet</p>
+                <Button onClick={() => setIsConnectModalOpen(true)} leftIcon={<PlusIcon className="h-5 w-5" />}>
+                  Connect First Item
+                </Button>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Golden Thread Visualizations */}
+        {items && items.length > 0 && (
+          <>
+            {/* Thread Connections Visualization */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold font-heading text-gray-900 dark:text-white mb-4">
+                Golden Thread Connections
+              </h2>
+              <Card>
+                <CardContent className="pt-6">
+                  <ThreadConnections
+                    integrations={items.map((item) => ({
+                      type: item.integrationType as 'figma' | 'linear' | 'github' | 'slack',
+                      status: 'connected' as const,
+                    }))}
+                  />
+                  <div className="mt-4 text-center">
+                    <ThreadStatus status="healthy" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Thread Flow Diagram */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold font-heading text-gray-900 dark:text-white mb-4">
+                Thread Flow View
+              </h2>
+              <ThreadFlowDiagram
+                nodes={items.map((item, index) => ({
+                  id: item.id,
+                  type: item.integrationType as 'figma' | 'linear' | 'github' | 'slack',
+                  label: item.title?.substring(0, 10) || item.integrationType,
+                  x: 100 + index * 150,
+                  y: 200,
+                }))}
+                connections={
+                  items.length > 1
+                    ? items.slice(0, -1).map((item, index) => ({
+                        from: item.id,
+                        to: items[index + 1].id,
+                        status: 'active' as const,
+                      }))
+                    : []
+                }
+                onNodeClick={(nodeId) => {
+                  const item = items.find((i) => i.id === nodeId);
+                  if (item?.externalUrl) {
+                    window.open(item.externalUrl, '_blank');
+                  }
+                }}
+              />
+            </div>
+          </>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Content */}
           <div className="space-y-6 lg:col-span-2">
-            {/* Connected Items */}
+
+            {/* Golden Thread Timeline */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Connected Items</CardTitle>
-                  <Button size="sm" onClick={() => setIsConnectModalOpen(true)}>
-                    <PlusIcon className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
-                </div>
+                <CardTitle>Golden Thread Timeline</CardTitle>
               </CardHeader>
               <CardContent>
-                {items && items.length > 0 ? (
-                  <div className="space-y-3">
-                    {items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between rounded-lg border border-gray-800 p-4"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/20">
-                            <span className="text-xs font-medium text-primary">
-                              {item.integrationType.substring(0, 2).toUpperCase()}
-                            </span>
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-white">{item.title || 'Untitled'}</h4>
-                            <p className="text-sm text-gray-500">
-                              {item.integrationType.charAt(0).toUpperCase() + item.integrationType.slice(1)}
-                              {item.itemType && ` • ${item.itemType}`}
-                            </p>
-                          </div>
-                        </div>
-                        {item.externalUrl && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => window.open(item.externalUrl!, '_blank')}
-                          >
-                            <LinkIcon className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-gray-400">
-                    <p>No connected items yet</p>
-                    <Button className="mt-4" size="sm" onClick={() => setIsConnectModalOpen(true)}>
-                      <PlusIcon className="mr-2 h-4 w-4" />
-                      Connect First Item
-                    </Button>
-                  </div>
-                )}
+                <ThreadTimeline
+                  activities={
+                    activity && activity.activities
+                      ? activity.activities.map((event: any) => {
+                          const integrationMap: Record<string, 'figma' | 'linear' | 'github' | 'slack' | undefined> = {
+                            'item_connected': items?.find((i) => i.id === event.metadata?.itemId)?.integrationType as any,
+                          };
+
+                          const titleMap: Record<string, string> = {
+                            'thread_created': 'Thread Created',
+                            'item_connected': 'Item Connected',
+                            'comment_added': 'Comment Added',
+                            'status_changed': 'Status Changed',
+                            'updated': 'Thread Updated',
+                          };
+
+                          return {
+                            id: event.id,
+                            type: event.type as any,
+                            title: titleMap[event.type] || event.type,
+                            description: event.metadata?.description || 'Activity occurred',
+                            timestamp: formatRelativeTime(new Date(event.createdAt)),
+                            integration: integrationMap[event.type],
+                            active: event.type === 'status_changed' && displayThread.status === 'in_progress',
+                          };
+                        })
+                      : []
+                  }
+                />
               </CardContent>
             </Card>
 
             {/* Comments */}
             <Card>
               <CardHeader>
-                <CardTitle>Comments</CardTitle>
+                <CardTitle>Comments ({localComments.length})</CardTitle>
               </CardHeader>
               <CardContent>
                 {localComments.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-4 mb-4">
                     {localComments.map((comment: any) => (
                       <div key={comment.id} className="flex space-x-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
@@ -294,22 +425,22 @@ export default function ThreadDetailPage() {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center space-x-2">
-                            <span className="text-sm font-medium text-white">User</span>
-                            <span className="text-xs text-gray-500">
+                            <span className="text-sm font-medium text-gray-900 dark:text-white">User</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
                               {formatRelativeTime(new Date(comment.createdAt))}
                             </span>
                           </div>
-                          <p className="mt-1 text-sm text-gray-400">{comment.content}</p>
+                          <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{comment.content}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-gray-400">
-                    <p>No comments yet</p>
+                  <div className="py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+                    <p>No comments yet. Be the first to comment!</p>
                   </div>
                 )}
-                <div className="mt-4">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <CommentForm threadId={displayThread.id} />
                 </div>
               </CardContent>
@@ -318,38 +449,72 @@ export default function ThreadDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Status */}
+            {/* Actions */}
             <Card>
               <CardHeader>
-                <CardTitle>Status</CardTitle>
+                <CardTitle>Actions</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Badge variant={displayThread.status === 'completed' ? 'success' : 'primary'} size="md">
-                  {displayThread.status.replace('_', ' ')}
-                </Badge>
+              <CardContent className="space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  leftIcon={<PlusIcon className="h-4 w-4" />}
+                  onClick={() => setIsConnectModalOpen(true)}
+                >
+                  Add Item
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start"
+                  leftIcon={<PencilIcon className="h-4 w-4" />}
+                  onClick={() => setIsEditModalOpen(true)}
+                >
+                  Edit Thread
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="w-full justify-start"
+                  leftIcon={<TrashIcon className="h-4 w-4" />}
+                  onClick={() => setIsDeleteModalOpen(true)}
+                >
+                  Delete Thread
+                </Button>
               </CardContent>
             </Card>
 
-            {/* Activity Feed */}
+            {/* Thread Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>Details</CardTitle>
               </CardHeader>
-              <CardContent>
-                {activity && activity.activities && activity.activities.length > 0 ? (
-                  <div className="space-y-3">
-                    {activity.activities.map((event: any) => (
-                      <div key={event.id} className="text-sm">
-                        <p className="text-gray-300">{event.type}</p>
-                        <p className="text-xs text-gray-500">
-                          {formatRelativeTime(new Date(event.createdAt))}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-400">No recent activity</p>
-                )}
+              <CardContent className="space-y-3 text-sm">
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Status</span>
+                  <Badge variant={getStatusBadgeVariant(displayThread.status)}>
+                    {displayThread.status.replace('_', ' ')}
+                  </Badge>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Created</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {formatRelativeTime(new Date(displayThread.createdAt))}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Last Updated</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {formatRelativeTime(new Date(displayThread.updatedAt))}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600 dark:text-gray-400 block mb-1">Connected Items</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {items?.length || 0}
+                  </span>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -367,22 +532,31 @@ export default function ThreadDetailPage() {
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Delete Thread"
-        description="Are you sure you want to delete this thread? This action cannot be undone."
         size="sm"
       >
-        <div className="flex justify-end space-x-3">
-          <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-            Cancel
-          </Button>
-          <Button
-            variant="danger"
-            loading={deleteThread.isLoading}
-            onClick={() => deleteThread.mutate({ id: displayThread.id })}
-          >
-            Delete Thread
-          </Button>
-        </div>
+        <ModalHeader>
+          <div className="flex-1">
+            <ModalTitle>Delete Thread</ModalTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Are you sure you want to delete this thread? This action cannot be undone.
+            </p>
+          </div>
+          <ModalClose onClose={() => setIsDeleteModalOpen(false)} />
+        </ModalHeader>
+        <ModalBody>
+          <div className="flex justify-end space-x-3">
+            <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              loading={deleteThread.isLoading}
+              onClick={() => deleteThread.mutate({ id: displayThread.id })}
+            >
+              Delete Thread
+            </Button>
+          </div>
+        </ModalBody>
       </Modal>
 
       {/* Connect Items Modal */}
@@ -391,7 +565,7 @@ export default function ThreadDetailPage() {
         isOpen={isConnectModalOpen}
         onClose={() => setIsConnectModalOpen(false)}
       />
-    </Layout>
+    </AppLayout>
   );
 }
 
@@ -463,29 +637,35 @@ function EditThreadModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Thread">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <Textarea
-          label="Description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-        <Select label="Status" value={status} onChange={setStatus} options={statusOptions} />
-        <div className="flex justify-end space-x-3">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={updateThread.isLoading}>
-            Save Changes
-          </Button>
-        </div>
-      </form>
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalHeader>
+        <ModalTitle>Edit Thread</ModalTitle>
+        <ModalClose onClose={onClose} />
+      </ModalHeader>
+      <ModalBody>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            label="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+          <Textarea
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <Select label="Status" value={status} onChange={setStatus} options={statusOptions} />
+          <div className="flex justify-end gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={updateThread.isLoading}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </ModalBody>
     </Modal>
   );
 }
@@ -534,48 +714,55 @@ function ConnectItemsModal({
   }));
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Connect Item">
-      {activeIntegrations.length === 0 ? (
-        <div className="py-8 text-center">
-          <p className="text-gray-400 mb-4">No active integrations found.</p>
-          <p className="text-sm text-gray-500 mb-4">
-            You need to connect an integration before you can add items to threads.
-          </p>
-          <Button onClick={() => window.location.href = '/integrations'}>
-            Go to Integrations
-          </Button>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Select
-            label="Integration"
-            value={selectedIntegration}
-            onChange={setSelectedIntegration}
-            options={integrationOptions}
-            placeholder="Select an integration"
-          />
-          <Input
-            label="Item URL"
-            value={externalUrl}
-            onChange={(e) => setExternalUrl(e.target.value)}
-            placeholder="https://github.com/user/repo/issues/123"
-            required
-            helperText="Paste the URL from your connected integration (e.g., GitHub issue, Linear ticket, etc.)"
-          />
-          <div className="flex justify-end space-x-3">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              loading={connectItem.isLoading}
-              disabled={!selectedIntegration || !externalUrl.trim()}
-            >
-              Connect Item
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalHeader>
+        <ModalTitle>Connect Item</ModalTitle>
+        <ModalClose onClose={onClose} />
+      </ModalHeader>
+      <ModalBody>
+        {activeIntegrations.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-gray-400 mb-4">No active integrations found.</p>
+            <p className="text-sm text-gray-500 mb-4">
+              You need to connect an integration before you can add items to threads.
+            </p>
+            <Button onClick={() => window.location.href = '/integrations'}>
+              Go to Integrations
             </Button>
           </div>
-        </form>
-      )}
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Select
+              label="Integration"
+              value={selectedIntegration}
+              onChange={setSelectedIntegration}
+              options={integrationOptions}
+              placeholder="Select an integration"
+            />
+            <Input
+              label="Item URL"
+              value={externalUrl}
+              onChange={(e) => setExternalUrl(e.target.value)}
+              placeholder="https://github.com/user/repo/issues/123"
+              required
+              helperText="Paste the URL from your connected integration (e.g., GitHub issue, Linear ticket, etc.)"
+            />
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                loading={connectItem.isLoading}
+                disabled={!selectedIntegration || !externalUrl.trim()}
+              >
+                Connect Item
+              </Button>
+            </div>
+          </form>
+        )}
+      </ModalBody>
     </Modal>
   );
 }

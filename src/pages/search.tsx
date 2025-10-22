@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select, SelectOption } from '@/components/ui/Select';
@@ -48,12 +48,12 @@ export default function SearchPage() {
   };
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white">Search</h1>
-          <p className="mt-1 text-gray-400">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">Search</h1>
+          <p className="text-gray-500 dark:text-[#FDFFFC]/60">
             Find anything across all your connected tools
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function SearchPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </AppLayout>
   );
 }
 

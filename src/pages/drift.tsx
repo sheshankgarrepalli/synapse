@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { api } from '@/utils/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -78,13 +78,13 @@ export default function DriftPage() {
   };
 
   return (
-    <Layout>
-      <div className="mx-auto max-w-7xl space-y-6 p-6">
+    <AppLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Design-Code Drift Detection</h1>
-            <p className="mt-2 text-gray-400">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">Design-Code Drift Detection</h1>
+            <p className="text-gray-500 dark:text-[#FDFFFC]/60">
               Monitor when Figma designs drift from GitHub code implementation
             </p>
           </div>
@@ -92,24 +92,24 @@ export default function DriftPage() {
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-lg border border-gray-700 bg-[#1A1F28] p-6">
-              <div className="text-sm font-medium text-gray-400">Total Drifts</div>
-              <div className="mt-2 text-3xl font-bold text-white">{stats.total}</div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="bg-white dark:bg-[#011627] border border-gray-200 dark:border-[#2EC4B6]/20 rounded-2xl p-6 shadow-sm dark:shadow-[#2EC4B6]/5">
+              <div className="text-sm font-medium text-gray-500 dark:text-[#FDFFFC]/60">Total Drifts</div>
+              <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-[#FDFFFC]">{stats.total}</div>
             </div>
-            <div className="rounded-lg border border-gray-700 bg-[#1A1F28] p-6">
-              <div className="text-sm font-medium text-gray-400">Recent (7 days)</div>
-              <div className="mt-2 text-3xl font-bold text-white">{stats.recentDrifts}</div>
+            <div className="bg-white dark:bg-[#011627] border border-gray-200 dark:border-[#2EC4B6]/20 rounded-2xl p-6 shadow-sm dark:shadow-[#2EC4B6]/5">
+              <div className="text-sm font-medium text-gray-500 dark:text-[#FDFFFC]/60">Recent (7 days)</div>
+              <div className="mt-2 text-3xl font-bold text-gray-900 dark:text-[#FDFFFC]">{stats.recentDrifts}</div>
             </div>
-            <div className="rounded-lg border border-gray-700 bg-[#1A1F28] p-6">
-              <div className="text-sm font-medium text-gray-400">Critical</div>
+            <div className="bg-white dark:bg-[#011627] border border-gray-200 dark:border-[#2EC4B6]/20 rounded-2xl p-6 shadow-sm dark:shadow-[#2EC4B6]/5">
+              <div className="text-sm font-medium text-gray-500 dark:text-[#FDFFFC]/60">Critical</div>
               <div className="mt-2 text-3xl font-bold text-red-500">
                 {stats.bySeverity.critical || 0}
               </div>
             </div>
-            <div className="rounded-lg border border-gray-700 bg-[#1A1F28] p-6">
-              <div className="text-sm font-medium text-gray-400">Unresolved</div>
-              <div className="mt-2 text-3xl font-bold text-yellow-500">
+            <div className="bg-white dark:bg-[#011627] border border-gray-200 dark:border-[#2EC4B6]/20 rounded-2xl p-6 shadow-sm dark:shadow-[#2EC4B6]/5">
+              <div className="text-sm font-medium text-gray-500 dark:text-[#FDFFFC]/60">Unresolved</div>
+              <div className="mt-2 text-3xl font-bold text-[#FF9F1C]">
                 {(stats.byStatus.detected || 0) + (stats.byStatus.acknowledged || 0)}
               </div>
             </div>
@@ -119,11 +119,11 @@ export default function DriftPage() {
         {/* Filters */}
         <div className="flex flex-wrap gap-4">
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-400">Status</label>
+            <label className="mb-2 block text-sm font-medium text-gray-500 dark:text-[#FDFFFC]/60">Status</label>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as any)}
-              className="rounded-lg border border-gray-700 bg-[#1A1F28] px-4 py-2 text-white focus:border-primary focus:outline-none"
+              className="rounded-lg border border-gray-200 dark:border-[#2EC4B6]/30 bg-white dark:bg-[#011627] px-4 py-2 text-gray-900 dark:text-[#FDFFFC] focus:border-[#FCA311] dark:focus:border-[#2EC4B6] focus:outline-none"
             >
               <option value="all">All Statuses</option>
               <option value="detected">Detected</option>
@@ -134,11 +134,11 @@ export default function DriftPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-400">Severity</label>
+            <label className="mb-2 block text-sm font-medium text-gray-500 dark:text-[#FDFFFC]/60">Severity</label>
             <select
               value={selectedSeverity}
               onChange={(e) => setSelectedSeverity(e.target.value as any)}
-              className="rounded-lg border border-gray-700 bg-[#1A1F28] px-4 py-2 text-white focus:border-primary focus:outline-none"
+              className="rounded-lg border border-gray-200 dark:border-[#2EC4B6]/30 bg-white dark:bg-[#011627] px-4 py-2 text-gray-900 dark:text-[#FDFFFC] focus:border-[#FCA311] dark:focus:border-[#2EC4B6] focus:outline-none"
             >
               <option value="all">All Severities</option>
               <option value="critical">Critical</option>
@@ -150,9 +150,9 @@ export default function DriftPage() {
         </div>
 
         {/* Drift Alerts List */}
-        <div className="rounded-lg border border-gray-700 bg-[#1A1F28]">
-          <div className="border-b border-gray-700 p-6">
-            <h2 className="text-xl font-semibold text-white">Drift Alerts</h2>
+        <div className="bg-white dark:bg-[#011627] border border-gray-200 dark:border-[#2EC4B6]/20 rounded-2xl shadow-sm dark:shadow-[#2EC4B6]/5">
+          <div className="border-b border-gray-200 dark:border-[#2EC4B6]/20 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-[#FDFFFC]">Drift Alerts</h2>
           </div>
 
           {isLoading ? (
@@ -535,6 +535,6 @@ export default function DriftPage() {
           </div>
         )}
       </div>
-    </Layout>
+    </AppLayout>
   );
 }

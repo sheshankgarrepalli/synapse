@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -18,13 +18,13 @@ export default function AutomationsPage() {
   const { data: automations, isLoading } = api.automations.list.useQuery();
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white">Automations</h1>
-            <p className="mt-1 text-gray-400">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">Automations</h1>
+            <p className="text-gray-500 dark:text-[#FDFFFC]/60">
               Create workflows that run automatically across your tools
             </p>
           </div>
@@ -36,7 +36,7 @@ export default function AutomationsPage() {
 
         {/* Automation Templates */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-white">Popular Templates</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Popular Templates</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <AutomationTemplate
               title="Sync GitHub PRs to Linear"
@@ -61,7 +61,7 @@ export default function AutomationsPage() {
 
         {/* Active Automations */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-white">Your Automations</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Your Automations</h2>
           {isLoading ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -99,7 +99,7 @@ export default function AutomationsPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
-    </Layout>
+    </AppLayout>
   );
 }
 
@@ -320,8 +320,8 @@ function CreateAutomationModal({ isOpen, onClose }: { isOpen: boolean; onClose: 
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create GitHub Automation"
-      description="Automatically create threads when GitHub events occur"
+      
+      
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input

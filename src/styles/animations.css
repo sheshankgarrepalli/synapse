@@ -1,0 +1,568 @@
+/**
+ * Synapse Design System - Animation Definitions
+ * Golden Threads Enterprise UI - Keyframe Animations
+ */
+
+/* ============================================
+   FADE ANIMATIONS
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   SLIDE ANIMATIONS
+   ============================================ */
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   GOLDEN THREAD ANIMATIONS (Signature)
+   ============================================ */
+
+/* Thread Flow - Shimmer moving along connection line */
+@keyframes threadFlow {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(300%);
+    opacity: 0;
+  }
+}
+
+/* Thread Pulse - Pulsing glow for active nodes */
+@keyframes threadPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 4px rgba(212, 165, 116, 0.2),
+      0 0 12px rgba(212, 165, 116, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(212, 165, 116, 0.1),
+      0 0 20px rgba(212, 165, 116, 0.4);
+    transform: scale(1.05);
+  }
+}
+
+/* Golden Glow - Breathing glow effect */
+@keyframes goldenGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(212, 165, 116, 0.2),
+      0 0 20px rgba(212, 165, 116, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(212, 165, 116, 0.3),
+      0 0 40px rgba(212, 165, 116, 0.15);
+  }
+}
+
+/* Thread Connect - Line drawing animation */
+@keyframes threadConnect {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ============================================
+   SHIMMER ANIMATIONS (Loading States)
+   ============================================ */
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes shimmerGold {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Skeleton Loader Wave */
+@keyframes skeletonWave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+   SCALE ANIMATIONS
+   ============================================ */
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   SPIN ANIMATIONS (Loading Spinners)
+   ============================================ */
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ============================================
+   PROGRESS ANIMATIONS
+   ============================================ */
+
+@keyframes progressIndeterminate {
+  0% {
+    transform: translateX(-100%) scaleX(0.5);
+  }
+  50% {
+    transform: translateX(0%) scaleX(0.8);
+  }
+  100% {
+    transform: translateX(100%) scaleX(0.5);
+  }
+}
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--progress-width, 100%);
+  }
+}
+
+/* ============================================
+   MODAL/DIALOG ANIMATIONS
+   ============================================ */
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+@keyframes drawerSlideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawerSlideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ============================================
+   NOTIFICATION/TOAST ANIMATIONS
+   ============================================ */
+
+@keyframes toastSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastSlideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes notificationBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ============================================
+   TOOLTIP ANIMATIONS
+   ============================================ */
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tooltipFadeOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* ============================================
+   ACCORDION ANIMATIONS
+   ============================================ */
+
+@keyframes accordionSlideDown {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+}
+
+@keyframes accordionSlideUp {
+  from {
+    height: var(--radix-accordion-content-height);
+    opacity: 1;
+  }
+  to {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   SHAKE/WIGGLE ANIMATIONS (Error States)
+   ============================================ */
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-3deg);
+  }
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
+/* ============================================
+   UTILITY ANIMATION CLASSES
+   ============================================ */
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-thread-flow {
+  animation: threadFlow 2s infinite;
+}
+
+.animate-thread-pulse {
+  animation: threadPulse 2s infinite;
+}
+
+.animate-golden-glow {
+  animation: goldenGlow 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ============================================
+   TRANSITION UTILITIES
+   ============================================ */
+
+.transition-smooth {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-bounce {
+  transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   GOLDEN THREAD UTILITY CLASSES
+   ============================================ */
+
+/* Thread connection line with shimmer */
+.thread-connection {
+  position: relative;
+  overflow: hidden;
+}
+
+.thread-connection::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: threadFlow 2s infinite;
+}
+
+/* Thread node with pulse */
+.thread-node {
+  animation: threadPulse 2s infinite;
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* GPU-accelerated animations */
+.will-animate {
+  will-change: transform, opacity;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .animate-thread-flow,
+  .animate-thread-pulse,
+  .animate-golden-glow,
+  .animate-shimmer,
+  .animate-spin,
+  .animate-pulse,
+  .thread-connection,
+  .thread-node {
+    animation: none !important;
+  }
+
+  .thread-connection::after {
+    display: none;
+  }
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -161,19 +161,19 @@ export default function IntegrationsPage() {
   };
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white">Integrations</h1>
-          <p className="mt-1 text-gray-400">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">Integrations</h1>
+          <p className="text-gray-500 dark:text-[#FDFFFC]/60">
             Connect your tools to create Golden Threads across your workflow
           </p>
         </div>
 
         {/* Tier 1: Core Integrations */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-white">Core Integrations</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Core Integrations</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 1)
@@ -350,7 +350,7 @@ export default function IntegrationsPage() {
 
         {/* Tier 2: Design & Documentation */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-white">Design & Documentation</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Design & Documentation</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 2)
@@ -436,7 +436,7 @@ export default function IntegrationsPage() {
 
         {/* Tier 3: Analytics & Research */}
         <div>
-          <h2 className="mb-4 text-xl font-semibold text-white">Analytics & Research</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Analytics & Research</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 3)
@@ -542,6 +542,6 @@ export default function IntegrationsPage() {
           integrationName={healthMonitorIntegration.name}
         />
       )}
-    </Layout>
+    </AppLayout>
   );
 }

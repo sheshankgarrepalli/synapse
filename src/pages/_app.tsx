@@ -1,4 +1,5 @@
 import '@/styles/globals.css';
+import '@/styles/animations.css';
 import '@/styles/shepherd-custom.css';
 import type { AppProps } from 'next/app';
 import { ClerkProvider } from '@clerk/nextjs';

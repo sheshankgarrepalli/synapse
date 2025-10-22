@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { Layout } from '@/components/Layout';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -39,16 +39,16 @@ export default function IntelligencePage() {
   const isLoading = feedLoading || summaryLoading;
 
   return (
-    <Layout>
+    <AppLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="flex items-center space-x-2 text-3xl font-bold text-white">
-              <SparklesIcon className="h-8 w-8 text-primary" />
+            <h1 className="flex items-center space-x-2 text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">
+              <SparklesIcon className="h-8 w-8 text-[#FCA311] dark:text-[#FF9F1C]" />
               <span>Intelligence Feed</span>
             </h1>
-            <p className="mt-1 text-gray-400">
+            <p className="text-gray-500 dark:text-[#FDFFFC]/60">
               AI-powered insights about your work across all tools
             </p>
           </div>
@@ -508,6 +508,6 @@ export default function IntelligencePage() {
           </>
         )}
       </div>
-    </Layout>
+    </AppLayout>
   );
 }

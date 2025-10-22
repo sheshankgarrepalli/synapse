@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export interface EmptyStateProps {
   icon?: ReactNode;
@@ -16,7 +17,9 @@ export interface EmptyStateProps {
     href?: string;
     onClick?: () => void;
   };
-  illustration?: 'threads' | 'integrations' | 'intelligence' | 'drift' | 'search' | 'automations' | 'generic';
+  illustration?: 'threads' | 'integrations' | 'intelligence' | 'drift' | 'search' | 'automations' | 'generic' | 'no-results' | 'error';
+  variant?: 'default' | 'compact';
+  className?: string;
 }
 
 const illustrations = {
@@ -55,6 +58,16 @@ const illustrations = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
     </svg>
   ),
+  'no-results': (
+    <div className="text-6xl opacity-50 select-none">
+      🔍
+    </div>
+  ),
+  error: (
+    <div className="text-6xl opacity-50 select-none">
+      ⚠️
+    </div>
+  ),
 };
 
 export function EmptyState({
@@ -64,41 +77,79 @@ export function EmptyState({
   action,
   secondaryAction,
   illustration = 'generic',
+  variant = 'default',
+  className,
 }: EmptyStateProps) {
+  const isCompact = variant === 'compact';
+
   return (
-    <div className="flex min-h-[400px] items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white p-12">
-      <div className="text-center">
-        {/* Illustration or Custom Icon */}
-        <div className="mb-6 flex justify-center">
+    <div
+      className={cn(
+        'flex items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-card',
+        isCompact ? 'min-h-[300px] p-8' : 'min-h-[400px] p-12',
+        'animate-fadeIn',
+        className
+      )}
+    >
+      <div className="text-center max-w-lg">
+        {/* Illustration or Custom Icon with animation */}
+        <div className={cn('mb-6 flex justify-center', 'animate-slideInUp')}>
           {icon || illustrations[illustration]}
         </div>
 
-        {/* Title */}
-        <h3 className="mb-2 text-2xl font-bold text-gray-900">{title}</h3>
+        {/* Title with stagger animation */}
+        <h3
+          className={cn(
+            'mb-2 font-bold text-foreground animate-slideInUp',
+            isCompact ? 'text-xl' : 'text-2xl'
+          )}
+          style={{ animationDelay: '0.1s' }}
+        >
+          {title}
+        </h3>
 
-        {/* Description */}
-        <p className="mx-auto mb-8 max-w-md text-gray-600">{description}</p>
+        {/* Description with stagger animation */}
+        <p
+          className={cn(
+            'mx-auto mb-8 text-muted-foreground animate-slideInUp',
+            isCompact ? 'max-w-sm text-sm' : 'max-w-md'
+          )}
+          style={{ animationDelay: '0.2s' }}
+        >
+          {description}
+        </p>
 
-        {/* Actions */}
+        {/* Actions with stagger animation */}
         {(action || secondaryAction) && (
-          <div className="flex items-center justify-center gap-3">
+          <div
+            className="flex items-center justify-center gap-3 animate-slideInUp"
+            style={{ animationDelay: '0.3s' }}
+          >
             {action && (
               action.href ? (
                 <Link href={action.href}>
-                  <Button>{action.label}</Button>
+                  <Button size={isCompact ? 'sm' : 'md'}>{action.label}</Button>
                 </Link>
               ) : (
-                <Button onClick={action.onClick}>{action.label}</Button>
+                <Button size={isCompact ? 'sm' : 'md'} onClick={action.onClick}>
+                  {action.label}
+                </Button>
               )
             )}
 
             {secondaryAction && (
               secondaryAction.href ? (
                 <Link href={secondaryAction.href}>
-                  <Button variant="outline">{secondaryAction.label}</Button>
+                  <Button variant="outline" size={isCompact ? 'sm' : 'md'}>
+                    {secondaryAction.label}
+                  </Button>
                 </Link>
               ) : (
-                <Button variant="outline" onClick={secondaryAction.onClick}>
+                <Button
+                  variant="outline"
+                  size={isCompact ? 'sm' : 'md'}
+                  onClick={secondaryAction.onClick}
+                >
                   {secondaryAction.label}
                 </Button>
               )

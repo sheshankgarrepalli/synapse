@@ -5,7 +5,7 @@
  * Shows what's now possible with this integration and encourages first action.
  */
 
-import { Modal } from '@/components/ui/Modal';
+import { Modal, ModalBody } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { SparklesIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
@@ -39,10 +39,9 @@ export function IntegrationCelebration({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title=""
       size="lg"
     >
-      <div className="text-center">
+      <ModalBody className="text-center">
         {/* Celebration animation */}
         <div className="mb-6 flex justify-center relative">
           <div className="relative">
@@ -122,7 +121,7 @@ export function IntegrationCelebration({
             </div>
           </div>
         </div>
-      </div>
+      </ModalBody>
     </Modal>
   );
 }

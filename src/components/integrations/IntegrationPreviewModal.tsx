@@ -1,4 +1,4 @@
-import { Modal } from '@/components/ui/Modal';
+import { Modal, ModalHeader, ModalTitle, ModalClose, ModalBody } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import {
@@ -46,11 +46,16 @@ export function IntegrationPreviewModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Connect ${integration.name}`}
-      description={integration.description}
-      size="large"
+      size="lg"
     >
-      <div className="space-y-6">
+      <ModalHeader>
+        <div>
+          <ModalTitle>Connect {integration.name}</ModalTitle>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{integration.description}</p>
+        </div>
+        <ModalClose onClose={onClose} />
+      </ModalHeader>
+      <ModalBody className="space-y-6">
         {/* Overview */}
         <div className="rounded-lg bg-gradient-to-br from-purple-500/10 to-transparent border border-purple-500/20 p-4">
           <p className="text-sm text-gray-300">{integration.longDescription}</p>
@@ -149,7 +154,7 @@ export function IntegrationPreviewModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-700">
+        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-gray-700 dark:border-gray-800">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -158,7 +163,7 @@ export function IntegrationPreviewModal({
             <ArrowRightIcon className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </div>
+      </ModalBody>
     </Modal>
   );
 }

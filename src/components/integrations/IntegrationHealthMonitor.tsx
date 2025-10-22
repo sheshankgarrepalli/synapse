@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal } from '@/components/ui/Modal';
+import { Modal, ModalHeader, ModalTitle, ModalClose, ModalBody } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { api } from '@/utils/api';
@@ -102,10 +102,13 @@ export function IntegrationHealthMonitor({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`${integrationName} Health Monitor`}
-      size="large"
+      size="lg"
     >
-      <div className="space-y-6">
+      <ModalHeader>
+        <ModalTitle>{integrationName} Health Monitor</ModalTitle>
+        <ModalClose onClose={onClose} />
+      </ModalHeader>
+      <ModalBody className="space-y-6">
         {/* Tabs */}
         <div className="flex space-x-2 border-b border-gray-700">
           <button
@@ -335,7 +338,7 @@ export function IntegrationHealthMonitor({
             Close
           </Button>
         </div>
-      </div>
+      </ModalBody>
     </Modal>
   );
 }

@@ -1,325 +1,196 @@
-import { useState } from 'react';
-import { Layout } from '@/components/Layout';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
+import { useState, useEffect } from 'react';
+import { Sidebar } from '@/components/dashboard/Sidebar';
+import { TopBar } from '@/components/dashboard/TopBar';
+import { StatsCard } from '@/components/dashboard/StatsCard';
+import { DashboardThreadCard } from '@/components/dashboard/DashboardThreadCard';
+import { DashboardActivityChart } from '@/components/dashboard/DashboardActivityChart';
+import { DashboardActivityPanel } from '@/components/dashboard/DashboardActivityPanel';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select, SelectOption } from '@/components/ui/Select';
-import { Badge } from '@/components/ui/Badge';
-import { Modal } from '@/components/ui/Modal';
-import { EmptyStateWithTemplates, Template } from '@/components/EmptyStateWithTemplates';
-import { IntegrationPrompt } from '@/components/IntegrationPrompt';
+import { GitBranch, CheckCircle2, AlertTriangle, Plus } from 'lucide-react';
 import { api } from '@/utils/api';
-import { formatRelativeTime, getStatusColor } from '@/lib/utils';
-import { shouldShowIntegrationPrompt, type IntegrationType } from '@/lib/integrations/recommendations';
-import { PlusIcon, MagnifyingGlassIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 
-const statusOptions: SelectOption[] = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'planning', label: 'Planning' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'review', label: 'Review' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'archived', label: 'Archived' },
-];
-
 export default function Dashboard() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'planning' | 'in_progress' | 'review' | 'completed' | 'archived'>('all');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [integrationPromptDismissed, setIntegrationPromptDismissed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+  const { user } = useUser();
 
-  // Fetch threads
-  const { data: threadsData, isLoading } = api.threads.list.useQuery({
+  // Fetch threads and analytics data
+  const { data: threadsData, isLoading: threadsLoading } = api.threads.list.useQuery({
     limit: 20,
-    search: searchQuery || undefined,
-    status: statusFilter !== 'all' ? statusFilter : undefined,
   });
-
-  // Fetch analytics
   const { data: analytics } = api.analytics.getDashboard.useQuery();
 
-  // Mock user integrations for now - TODO: fetch from API
-  const userIntegrations: IntegrationType[] = ['linear']; // Example: user has only Linear connected
-  const threadCount = threadsData?.threads.length || 0;
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [darkMode]);
 
-  // Determine if we should show integration prompt
-  const showIntegrationPrompt =
-    !integrationPromptDismissed &&
-    shouldShowIntegrationPrompt(userIntegrations, threadCount);
-
-  const handleConnectIntegration = (integration: IntegrationType) => {
-    // TODO: Trigger OAuth flow for integration
-    console.log('Connecting integration:', integration);
-    // For now, just dismiss the prompt
-    setIntegrationPromptDismissed(true);
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
   };
 
-  const handleDismissPrompt = () => {
-    setIntegrationPromptDismissed(true);
-    // TODO: Store dismissal in localStorage or user preferences with timestamp
-  };
-
-  return (
-    <Layout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-1 text-gray-600">Manage your Golden Threads across all tools</p>
-          </div>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <PlusIcon className="mr-2 h-5 w-5" />
-            New Thread
-          </Button>
-        </div>
-
-        {/* Analytics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-gradient-to-br from-purple-50 to-white border-purple-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Metric Alerts</p>
-                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.totalThreads || 2686}</div>
-                <p className="mt-1 text-xs text-gray-500">Metric wins</p>
-              </div>
-              <div className="rounded-lg bg-purple-100 p-2">
-                <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="h-1.5 bg-purple-100 rounded-full overflow-hidden">
-                <div className="h-full bg-purple-600 rounded-full" style={{ width: '75%' }} />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Connect Users</p>
-                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.activeThreads || '57.2'}</div>
-                <p className="mt-1 text-xs text-gray-500">Metric wins</p>
-              </div>
-              <div className="rounded-lg bg-blue-100 p-2">
-                <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="h-1.5 bg-blue-100 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-600 rounded-full" style={{ width: '57%' }} />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-pink-50 to-white border-pink-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Workflow Progress</p>
-                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.totalItems || '27.7'}</div>
-                <p className="mt-1 text-xs text-gray-500">2d/4h</p>
-              </div>
-              <div className="rounded-lg bg-pink-100 p-2">
-                <svg className="h-5 w-5 text-pink-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="h-1.5 bg-pink-100 rounded-full overflow-hidden">
-                <div className="h-full bg-pink-600 rounded-full" style={{ width: '28%' }} />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-indigo-50 to-white border-indigo-100">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-gray-600 font-medium">Thread Activity</p>
-                <div className="mt-2 text-3xl font-bold text-gray-900">{analytics?.activeIntegrations || 10}</div>
-                <p className="mt-1 text-xs text-gray-500">Weekly</p>
-              </div>
-              <div className="rounded-lg bg-indigo-100 p-2">
-                <svg className="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-              </div>
-            </div>
-            <div className="mt-3">
-              <div className="h-1.5 bg-indigo-100 rounded-full overflow-hidden">
-                <div className="h-full bg-indigo-600 rounded-full" style={{ width: '65%' }} />
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Integration Prompt (shown when conditions are met) */}
-        {showIntegrationPrompt && (
-          <IntegrationPrompt
-            userIntegrations={userIntegrations}
-            onConnect={handleConnectIntegration}
-            onDismiss={handleDismissPrompt}
-          />
-        )}
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Input
-                placeholder="Search threads..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Select
-                value={statusFilter}
-                onChange={(value) => setStatusFilter(value as typeof statusFilter)}
-                options={statusOptions}
-                placeholder="Filter by status"
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Threads List */}
-        <div className="space-y-4">
-          {isLoading ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-center py-12">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : threadsData?.threads.length === 0 ? (
-            <EmptyStateWithTemplates
-              onCreateFromTemplate={(template: Template) => {
-                // Pre-populate the create modal with template data
-                setIsCreateModalOpen(true);
-                // TODO: Pass template data to modal to pre-fill
-              }}
-              onCreateBlank={() => setIsCreateModalOpen(true)}
-            />
-          ) : (
-            threadsData?.threads.map((thread) => (
-              <Link key={thread.id} href={`/threads/${thread.id}`}>
-                <Card hover>
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3">
-                          <h3 className="text-lg font-semibold text-white">{thread.title}</h3>
-                          <Badge variant={thread.status === 'completed' ? 'success' : 'primary'}>
-                            {thread.status.replace('_', ' ')}
-                          </Badge>
-                        </div>
-                        {thread.description && (
-                          <p className="mt-2 text-sm text-gray-400 line-clamp-2">{thread.description}</p>
-                        )}
-                        <div className="mt-4 flex items-center space-x-6 text-sm text-gray-500">
-                          <span>Updated {formatRelativeTime(new Date(thread.updatedAt))}</span>
-                          {thread._count?.connectedItems > 0 && (
-                            <span>{thread._count.connectedItems} connected items</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className={`h-3 w-3 rounded-full ${getStatusColor(thread.status)}`} />
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))
-          )}
-        </div>
-
-        {/* Pagination */}
-        {threadsData && threadsData.nextCursor && (
-          <div className="flex justify-center">
-            <Button variant="outline">Load More</Button>
-          </div>
-        )}
-      </div>
-
-      {/* Create Thread Modal */}
-      <CreateThreadModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-      />
-    </Layout>
-  );
-}
-
-// Create Thread Modal Component
-function CreateThreadModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<'planning' | 'in_progress' | 'review' | 'completed' | 'archived'>('planning');
-
-  const utils = api.useUtils();
-  const createThread = api.threads.create.useMutation({
-    onSuccess: () => {
-      utils.threads.list.invalidate();
-      utils.analytics.getDashboard.invalidate();
-      onClose();
-      setTitle('');
-      setDescription('');
-      setStatus('planning');
+  const stats = [
+    {
+      title: 'Active Threads',
+      value: analytics?.activeThreads || 24,
+      icon: GitBranch,
+      trend: { value: '+12%', positive: true },
+      subtitle: 'Across 8 projects',
+      color: '#FF9F1C'
     },
-  });
+    {
+      title: 'Completed Today',
+      value: 18,
+      icon: CheckCircle2,
+      trend: { value: '+8%', positive: true },
+      subtitle: '3 more than yesterday',
+      color: '#2EC4B6',
+    },
+    {
+      title: 'Errors Detected',
+      value: 3,
+      icon: AlertTriangle,
+      trend: { value: '-25%', positive: true },
+      subtitle: '2 resolved this week',
+      color: '#E71D36',
+    },
+  ];
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createThread.mutate({
-      title,
-      description: description || undefined,
-      status,
-    });
-  };
+  const threads = [
+    {
+      id: '1',
+      title: 'Design System Update - Button Component',
+      status: 'active' as const,
+      tools: ['Figma', 'GitHub', 'Linear'],
+      description: 'Updating button variants to match new brand guidelines',
+      activity: 'Figma design updated 2h ago, but code hasn\'t been synced',
+      timestamp: '2h ago',
+      updates: 3,
+      assignees: [
+        { name: 'Sarah Chen', avatar: 'SC', color: '#FCA311' },
+        { name: 'Mike Ross', avatar: 'MR', color: '#10B981' },
+      ],
+      priority: 'high' as const,
+    },
+    {
+      id: '2',
+      title: 'Mobile App Authentication Flow',
+      status: 'error' as const,
+      tools: ['Figma', 'GitHub', 'Slack'],
+      description: 'Implementing OAuth and social login options',
+      activity: 'Merge conflict detected in PR #234, requires team review',
+      timestamp: '4h ago',
+      updates: 7,
+      assignees: [
+        { name: 'Alex Kim', avatar: 'AK', color: '#EF4444' },
+      ],
+      priority: 'urgent' as const,
+    },
+    {
+      id: '3',
+      title: 'Dashboard Analytics Implementation',
+      status: 'active' as const,
+      tools: ['Linear', 'GitHub'],
+      description: 'Building real-time analytics dashboard for user metrics',
+      activity: 'Task moved to In Progress, PR draft created',
+      timestamp: '6h ago',
+      assignees: [
+        { name: 'Jordan Lee', avatar: 'JL', color: '#6366F1' },
+        { name: 'Sam Wilson', avatar: 'SW', color: '#EC4899' },
+      ],
+      priority: 'medium' as const,
+    },
+    {
+      id: '4',
+      title: 'API Documentation Sync',
+      status: 'paused' as const,
+      tools: ['GitHub', 'Slack', 'Linear'],
+      description: 'Syncing API docs with latest endpoint changes',
+      activity: 'Waiting for design review before proceeding',
+      timestamp: '1d ago',
+      assignees: [
+        { name: 'Taylor Park', avatar: 'TP', color: '#F59E0B' },
+      ],
+      priority: 'low' as const,
+    },
+  ];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Create Golden Thread"
-      description="Create a new thread to connect items across your tools"
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Enter thread title..."
-          required
-        />
-        <div>
-          <label className="mb-2 block text-sm font-medium text-gray-300">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter thread description..."
-            className="flex min-h-[100px] w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-        <Select
-          label="Status"
-          value={status}
-          onChange={(value) => setStatus(value as typeof status)}
-          options={statusOptions.filter(opt => opt.value !== 'all')}
-        />
-        <div className="flex justify-end space-x-3">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="submit" loading={createThread.isLoading} disabled={!title}>
-            Create Thread
-          </Button>
-        </div>
-      </form>
-    </Modal>
+    <div className="flex h-screen bg-gray-50 dark:bg-[#011627]">
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar darkMode={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
+
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-[1400px] mx-auto p-8">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">
+                  {getGreeting()}, {user?.firstName || 'there'} 👋
+                </h1>
+                <p className="text-gray-500 dark:text-[#FDFFFC]/60">
+                  Track and manage your Golden Threads across all integrations
+                </p>
+              </div>
+              <Link href="/threads/new">
+                <Button className="bg-[#FCA311] dark:bg-[#FF9F1C] hover:bg-[#FCA311]/90 dark:hover:bg-[#FF9F1C]/90 text-white shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20">
+                  <Plus className="w-5 h-5 mr-2" />
+                  New Thread
+                </Button>
+              </Link>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {stats.map((stat) => (
+                <StatsCard key={stat.title} {...stat} />
+              ))}
+            </div>
+
+            {/* Main Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              {/* Activity Chart */}
+              <div className="lg:col-span-2">
+                <DashboardActivityChart />
+              </div>
+
+              {/* Quick Stats */}
+              <DashboardActivityPanel />
+            </div>
+
+            {/* Recent Threads */}
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Recent Threads</h2>
+                <Link href="/threads">
+                  <Button variant="ghost" className="text-[#FCA311] dark:text-[#FF9F1C] hover:bg-[#FCA311]/10 dark:hover:bg-[#FF9F1C]/10">
+                    View all →
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {threads.map((thread) => (
+                  <Link key={thread.id} href={`/threads/${thread.id}`}>
+                    <DashboardThreadCard {...thread} />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
   );
 }

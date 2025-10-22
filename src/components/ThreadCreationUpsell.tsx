@@ -6,7 +6,7 @@
  * to get the full experience.
  */
 
-import { Modal } from '@/components/ui/Modal';
+import { Modal, ModalBody } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { SparklesIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import {
@@ -83,10 +83,9 @@ export function ThreadCreationUpsell({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title=""
       size="lg"
     >
-      <div className="text-center">
+      <ModalBody className="text-center">
         {/* Integration icon */}
         <div className="mb-6 flex justify-center">
           <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center text-4xl border-2 border-primary/30">
@@ -139,7 +138,7 @@ export function ThreadCreationUpsell({
         <p className="mt-6 text-xs text-gray-500">
           You can connect {integrationName} anytime in settings
         </p>
-      </div>
+      </ModalBody>
     </Modal>
   );
 }
