@@ -186,8 +186,8 @@ export default function IntegrationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-800">
-                            <span className="text-xl font-bold text-primary">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800">
+                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary">
                               {integration.name[0]}
                             </span>
                           </div>
@@ -227,13 +227,13 @@ export default function IntegrationsPage() {
                           {(() => {
                             const health = getHealthStatusForIntegration(integration.id);
                             return health && (
-                              <div className="mt-3 rounded-md border border-gray-700 bg-gray-900 p-3">
+                              <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 p-3">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-2">
                                     {getHealthIcon(health.healthStatus)}
                                     <div>
-                                      <p className="text-xs font-medium text-gray-300">Health Status</p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Health Status</p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-500">
                                         {health.lastSyncAt
                                           ? `Last sync ${formatRelativeTime(new Date(health.lastSyncAt))}`
                                           : 'No sync data'}
@@ -253,11 +253,11 @@ export default function IntegrationsPage() {
                             );
                           })()}
                           {integration.id === 'github' && webhookStatus && (
-                            <div className="mt-3 rounded-md border border-gray-700 bg-gray-900 p-3">
+                            <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 p-3">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className="text-xs font-medium text-gray-300">Automation Webhooks</p>
-                                  <p className="mt-1 text-xs text-gray-500">
+                                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Automation Webhooks</p>
+                                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
                                     {webhookStatus.configured
                                       ? `${webhookStatus.webhooks.length} organization${webhookStatus.webhooks.length !== 1 ? 's' : ''} configured`
                                       : 'Not configured'}
@@ -363,8 +363,8 @@ export default function IntegrationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-800">
-                            <span className="text-xl font-bold text-primary">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800">
+                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary">
                               {integration.name[0]}
                             </span>
                           </div>
@@ -449,8 +449,8 @@ export default function IntegrationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-800">
-                            <span className="text-xl font-bold text-primary">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800">
+                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary">
                               {integration.name[0]}
                             </span>
                           </div>
