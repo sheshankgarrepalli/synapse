@@ -9,14 +9,38 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
+  // Initialize theme from localStorage on mount
   useEffect(() => {
-    if (darkMode) {
+    setMounted(true);
+
+    // Load theme preference from localStorage
+    const storedTheme = localStorage.getItem('theme');
+    const isDark = storedTheme === 'dark' || storedTheme === null; // Default to dark if not set
+
+    setDarkMode(isDark);
+
+    // Apply theme immediately
+    if (isDark) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-  }, [darkMode]);
+  }, []);
+
+  // Update theme when darkMode changes
+  useEffect(() => {
+    if (!mounted) return;
+
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode, mounted]);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-[#011627]">
