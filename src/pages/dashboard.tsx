@@ -1,6 +1,4 @@
-import { useState, useEffect } from 'react';
-import { Sidebar } from '@/components/dashboard/Sidebar';
-import { TopBar } from '@/components/dashboard/TopBar';
+import { AppLayout } from '@/components/layouts/AppLayout';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { DashboardThreadCard } from '@/components/dashboard/DashboardThreadCard';
 import { DashboardActivityChart } from '@/components/dashboard/DashboardActivityChart';
@@ -12,8 +10,6 @@ import { useUser } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export default function Dashboard() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
   const { user } = useUser();
 
   // Fetch threads and analytics data
@@ -21,14 +17,6 @@ export default function Dashboard() {
     limit: 20,
   });
   const { data: analytics } = api.analytics.getDashboard.useQuery();
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [darkMode]);
 
   // Get greeting based on time of day
   const getGreeting = () => {
@@ -125,26 +113,20 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-[#011627]">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar darkMode={darkMode} onToggleTheme={() => setDarkMode(!darkMode)} />
-
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[1400px] mx-auto p-8">
+    <AppLayout>
+      <div className="p-8">
             {/* Header */}
             <div className="flex items-start justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900 mb-2">
                   {getGreeting()}, {user?.firstName || 'there'} 👋
                 </h1>
-                <p className="text-gray-500 dark:text-[#FDFFFC]/60">
+                <p className="text-gray-500 dark:text-[#FDFFFC]/60 minimal:text-gray-600">
                   Track and manage your Golden Threads across all integrations
                 </p>
               </div>
               <Link href="/threads/new">
-                <Button className="bg-[#FCA311] dark:bg-[#FF9F1C] hover:bg-[#FCA311]/90 dark:hover:bg-[#FF9F1C]/90 text-white shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20">
+                <Button className="bg-[#FCA311] dark:bg-[#FF9F1C] minimal:bg-gray-900 hover:bg-[#FCA311]/90 dark:hover:bg-[#FF9F1C]/90 minimal:hover:bg-gray-800 text-white shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20 minimal:shadow-none">
                   <Plus className="w-5 h-5 mr-2" />
                   New Thread
                 </Button>
@@ -172,9 +154,9 @@ export default function Dashboard() {
             {/* Recent Threads */}
             <div>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Recent Threads</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Recent Threads</h2>
                 <Link href="/threads">
-                  <Button variant="ghost" className="text-[#FCA311] dark:text-[#FF9F1C] hover:bg-[#FCA311]/10 dark:hover:bg-[#FF9F1C]/10">
+                  <Button variant="ghost" className="text-[#FCA311] dark:text-[#FF9F1C] minimal:text-gray-900 hover:bg-[#FCA311]/10 dark:hover:bg-[#FF9F1C]/10 minimal:hover:bg-gray-200">
                     View all →
                   </Button>
                 </Link>
@@ -188,9 +170,7 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-          </div>
-        </main>
       </div>
-    </div>
+    </AppLayout>
   );
 }

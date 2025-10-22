@@ -24,19 +24,19 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     <aside
       className={`${
         collapsed ? "w-20" : "w-64"
-      } bg-white dark:bg-[#01121F] border-r border-gray-200 dark:border-[#2EC4B6]/20 transition-all duration-300 flex flex-col`}
+      } bg-white dark:bg-[#01121F] minimal:bg-white border-r border-gray-200 dark:border-[#2EC4B6]/20 minimal:border-gray-300 transition-all duration-300 flex flex-col`}
     >
-      <div className="p-6 flex items-center justify-between border-b border-gray-200 dark:border-[#2EC4B6]/20">
+      <div className="p-6 flex items-center justify-between border-b border-gray-200 dark:border-[#2EC4B6]/20 minimal:border-gray-300">
         {!collapsed && (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FCA311] to-[#FCA311]/70 dark:from-[#FF9F1C] dark:to-[#2EC4B6] flex items-center justify-center shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FCA311] to-[#FCA311]/70 dark:from-[#FF9F1C] dark:to-[#2EC4B6] minimal:bg-gray-800 flex items-center justify-center shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20 minimal:shadow-none">
               <span className="text-white font-bold text-lg">S</span>
             </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-[#FDFFFC]">Synapse</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Synapse</span>
           </div>
         )}
         {collapsed && (
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FCA311] to-[#FCA311]/70 dark:from-[#FF9F1C] dark:to-[#2EC4B6] flex items-center justify-center mx-auto shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FCA311] to-[#FCA311]/70 dark:from-[#FF9F1C] dark:to-[#2EC4B6] minimal:bg-gray-800 flex items-center justify-center mx-auto shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/20 minimal:shadow-none">
             <span className="text-white font-bold text-lg">S</span>
           </div>
         )}
@@ -50,8 +50,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <button
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
                     item.active
-                      ? "bg-[#FCA311] dark:bg-gradient-to-r dark:from-[#FF9F1C] dark:to-[#FF9F1C]/80 text-white shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/30"
-                      : "text-gray-600 dark:text-[#FDFFFC]/60 hover:bg-gray-100 dark:hover:bg-[#2EC4B6]/10 dark:hover:text-[#2EC4B6]"
+                      ? "bg-[#FCA311] dark:bg-gradient-to-r dark:from-[#FF9F1C] dark:to-[#FF9F1C]/80 minimal:bg-gray-900 text-white shadow-lg shadow-[#FCA311]/20 dark:shadow-[#FF9F1C]/30 minimal:shadow-sm"
+                      : "text-gray-600 dark:text-[#FDFFFC]/60 minimal:text-gray-700 hover:bg-gray-100 dark:hover:bg-[#2EC4B6]/10 minimal:hover:bg-gray-200 dark:hover:text-[#2EC4B6] minimal:hover:text-gray-900"
                   } ${collapsed ? "justify-center" : ""}`}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -63,12 +63,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         </ul>
       </nav>
 
-      <div className="p-4 border-t border-gray-200 dark:border-[#2EC4B6]/20">
+      <div className="p-4 border-t border-gray-200 dark:border-[#2EC4B6]/20 minimal:border-gray-300">
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggle}
-          className={`w-full text-gray-600 dark:text-[#FDFFFC]/60 hover:bg-gray-100 dark:hover:bg-[#2EC4B6]/10 dark:hover:text-[#2EC4B6] ${
+          className={`w-full text-gray-600 dark:text-[#FDFFFC]/60 minimal:text-gray-700 hover:bg-gray-100 dark:hover:bg-[#2EC4B6]/10 minimal:hover:bg-gray-200 dark:hover:text-[#2EC4B6] minimal:hover:text-gray-900 ${
             collapsed ? "justify-center" : "justify-start"
           }`}
         >

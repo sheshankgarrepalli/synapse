@@ -1,0 +1,219 @@
+DASHBOARD PAGE COMPONENT TREE
+═══════════════════════════════════════════════════════════════
+
+📄 dashboard.tsx
+├─ 🏠 LayoutNew (wrapper)
+│  │
+│  ├─ 👋 GREETING HEADER SECTION
+│  │  ├─ GreetingHeader
+│  │  │  ├─ Time-based greeting ("Good afternoon")
+│  │  │  ├─ User name from Clerk ("Jessica")
+│  │  │  ├─ Animated wave emoji (👋)
+│  │  │  └─ Subtitle text
+│  │  └─ Button (New Thread)
+│  │
+│  ├─ 📊 STATS CARDS ROW (3 columns)
+│  │  ├─ StatsCard #1: Active Threads
+│  │  │  ├─ Icon (BoltIcon) in orange circle
+│  │  │  ├─ Big number (24)
+│  │  │  ├─ Trend indicator (+12%)
+│  │  │  └─ Description ("Across 8 projects")
+│  │  │
+│  │  ├─ StatsCard #2: Completed Today
+│  │  │  ├─ Icon (CheckCircle) in teal circle
+│  │  │  ├─ Big number (18)
+│  │  │  ├─ Trend indicator (+8%)
+│  │  │  └─ Description ("3 more than yesterday")
+│  │  │
+│  │  └─ StatsCard #3: Errors Detected
+│  │     ├─ Icon (ExclamationTriangle) in red circle
+│  │     ├─ Big number (3)
+│  │     ├─ Trend indicator (-25%)
+│  │     └─ Description ("2 resolved this week")
+│  │
+│  ├─ 📈 CHART + ACTIVITY SECTION (2-1 columns)
+│  │  ├─ ThreadActivityChart (2 columns)
+│  │  │  ├─ Title & subtitle
+│  │  │  ├─ Recharts AreaChart
+│  │  │  │  ├─ X-axis (Mon-Sun)
+│  │  │  │  ├─ Y-axis (thread count)
+│  │  │  │  ├─ Orange line + gradient (Total Threads)
+│  │  │  │  ├─ Teal line + gradient (Synced)
+│  │  │  │  └─ Legend
+│  │  │  └─ Tooltips
+│  │  │
+│  │  └─ ActivityPanel (1 column)
+│  │     ├─ Title ("Activity")
+│  │     ├─ Trend indicator (+19%)
+│  │     ├─ Big number (83%)
+│  │     └─ Daily bars (5 days)
+│  │        ├─ Mon: 92% (blue)
+│  │        ├─ Tue: 41% (red)
+│  │        ├─ Wed: 78% (teal)
+│  │        ├─ Thu: 0% (gray)
+│  │        └─ Fri: 63% (orange)
+│  │
+│  └─ 🎨 RECENT THREADS SECTION
+│     ├─ Section header
+│     │  ├─ Title ("Recent Threads")
+│     │  └─ "View all →" link
+│     │
+│     └─ Thread cards grid (2 columns)
+│        │
+│        ├─ EnhancedThreadCard #1
+│        │  ├─ Rainbow gradient top border
+│        │  ├─ Title & description
+│        │  ├─ Badges row
+│        │  │  ├─ StatusBadge (Active - green)
+│        │  │  ├─ StatusBadge (High - red)
+│        │  │  └─ Update count badge (3 Updates)
+│        │  ├─ Activity message
+│        │  └─ Footer
+│        │     ├─ Integration icons (Figma, GitHub, Linear)
+│        │     ├─ Team member avatars (2 overlapping circles)
+│        │     └─ Timestamp ("2h ago")
+│        │
+│        ├─ EnhancedThreadCard #2
+│        │  ├─ Rainbow gradient top border
+│        │  ├─ Title & description
+│        │  ├─ Badges row
+│        │  │  ├─ StatusBadge (Needs Attention - red)
+│        │  │  ├─ StatusBadge (Urgent - red)
+│        │  │  └─ Update count badge (7 Updates)
+│        │  ├─ Activity message
+│        │  └─ Footer
+│        │     ├─ Integration icons (Figma, GitHub, Slack)
+│        │     ├─ Team member avatars (1 circle)
+│        │     └─ Timestamp ("4h ago")
+│        │
+│        ├─ EnhancedThreadCard #3
+│        │  └─ [Similar structure...]
+│        │
+│        └─ EnhancedThreadCard #4
+│           └─ [Similar structure...]
+
+
+COMPONENT DEPENDENCIES
+═══════════════════════════════════════════════════════════════
+
+GreetingHeader
+├─ Dependencies:
+│  ├─ @clerk/nextjs (useUser hook)
+│  └─ cn utility function
+└─ Styling: Tailwind CSS
+
+StatsCard (Enhanced)
+├─ Dependencies:
+│  └─ cn utility function
+├─ Icons: Heroicons (user provided)
+└─ Styling: Tailwind CSS
+
+ThreadActivityChart
+├─ Dependencies:
+│  ├─ recharts library
+│  │  ├─ AreaChart
+│  │  ├─ Area
+│  │  ├─ XAxis
+│  │  ├─ YAxis
+│  │  ├─ CartesianGrid
+│  │  ├─ Tooltip
+│  │  ├─ Legend
+│  │  └─ ResponsiveContainer
+│  └─ cn utility function
+└─ Styling: Tailwind CSS + Recharts
+
+ActivityPanel
+├─ Dependencies:
+│  └─ cn utility function
+└─ Styling: Tailwind CSS
+
+EnhancedThreadCard
+├─ Dependencies:
+│  ├─ StatusBadge component
+│  └─ cn utility function
+├─ Icons: User provided
+└─ Styling: Tailwind CSS
+
+StatusBadge
+├─ Dependencies:
+│  └─ cn utility function
+└─ Styling: Tailwind CSS
+
+
+COLOR SYSTEM
+═══════════════════════════════════════════════════════════════
+
+Primary Colors (from globals.css):
+├─ Primary: #FCA311 (Orange/Amber)
+├─ Secondary: #14213D (Dark Navy Blue)
+├─ Background Light: #FFFFFF (White)
+└─ Background Dark: #000000 (Black)
+
+Component Colors:
+├─ Stats Card Icons:
+│  ├─ Orange: bg-primary/20 text-primary
+│  ├─ Teal: bg-teal-500/20 text-teal-500
+│  ├─ Red: bg-red-500/20 text-red-500
+│  ├─ Blue: bg-blue-500/20 text-blue-500
+│  ├─ Green: bg-green-500/20 text-green-500
+│  └─ Purple: bg-purple-500/20 text-purple-500
+│
+├─ Chart Colors:
+│  ├─ Total Threads: #FCA311 (orange)
+│  └─ Synced: #14B8A6 (teal)
+│
+├─ Activity Bars:
+│  ├─ Blue: bg-blue-500
+│  ├─ Red: bg-red-500
+│  ├─ Teal: bg-teal-500
+│  ├─ Gray: bg-gray-400
+│  └─ Orange: bg-orange-500
+│
+└─ Status Badges:
+   ├─ Active: green-500
+   ├─ Needs Attention: red-500
+   ├─ Paused: orange-500
+   ├─ Urgent: red-500
+   ├─ High: red-500
+   ├─ Medium: orange-500
+   └─ Low: blue-500
+
+
+RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════════
+
+Mobile (< 768px):
+├─ Stats cards: 1 column stack
+├─ Chart + Activity: 1 column stack
+└─ Thread cards: 1 column
+
+Tablet (768px - 1024px):
+├─ Stats cards: 3 columns
+├─ Chart + Activity: 1 column stack
+└─ Thread cards: 2 columns
+
+Desktop (> 1024px):
+├─ Stats cards: 3 columns
+├─ Chart + Activity: 2-1 column split
+└─ Thread cards: 2 columns
+
+
+THEME SUPPORT
+═══════════════════════════════════════════════════════════════
+
+Light Theme:
+├─ Background: #FFFFFF
+├─ Cards: #FFFFFF
+├─ Text: #000000
+├─ Borders: #E5E5E5
+└─ Chart grid: Light gray
+
+Dark Theme:
+├─ Background: #000000
+├─ Cards: #14213D (navy blue)
+├─ Text: #FFFFFF
+├─ Borders: Dark gray
+└─ Chart grid: Dark gray
+
+All components use CSS variables (--background, --card, etc.)
+for automatic theme switching via Tailwind's dark mode.

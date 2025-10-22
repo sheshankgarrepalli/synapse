@@ -1,24 +1,36 @@
-import { Search, Bell, Moon, Sun } from "lucide-react";
+import { Search, Bell, Moon, Sun, Minimize2 } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { useUser } from "@clerk/nextjs";
 import { UserButton } from "@clerk/nextjs";
 
 interface TopBarProps {
-  darkMode: boolean;
+  theme: 'light' | 'dark' | 'minimal';
   onToggleTheme: () => void;
 }
 
-export function TopBar({ darkMode, onToggleTheme }: TopBarProps) {
+export function TopBar({ theme, onToggleTheme }: TopBarProps) {
   const { user } = useUser();
 
+  const getThemeIcon = () => {
+    if (theme === 'dark') return <Sun className="w-5 h-5" />;
+    if (theme === 'minimal') return <Moon className="w-5 h-5" />;
+    return <Minimize2 className="w-5 h-5" />;
+  };
+
+  const getThemeLabel = () => {
+    if (theme === 'light') return 'Light theme';
+    if (theme === 'dark') return 'Dark theme';
+    return 'Minimal theme';
+  };
+
   return (
-    <header className="h-16 border-b border-gray-200 dark:border-[#2EC4B6]/20 bg-white dark:bg-[#011627] flex items-center justify-between px-8">
+    <header className="h-16 border-b border-gray-200 dark:border-[#2EC4B6]/20 minimal:border-gray-300 bg-white dark:bg-[#011627] minimal:bg-white flex items-center justify-between px-8">
       <div className="flex-1 max-w-xl">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#FDFFFC]/40" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-[#FDFFFC]/40 minimal:text-gray-500" />
           <Input
             placeholder="Search threads, projects, or team members..."
-            className="pl-10 bg-gray-50 dark:bg-[#011627] border-gray-200 dark:border-[#2EC4B6]/30 text-gray-900 dark:text-[#FDFFFC] placeholder:text-gray-400 dark:placeholder:text-[#FDFFFC]/40 rounded-xl focus:border-[#FCA311] dark:focus:border-[#2EC4B6]"
+            className="pl-10 bg-gray-50 dark:bg-[#011627] minimal:bg-gray-100 border-gray-200 dark:border-[#2EC4B6]/30 minimal:border-gray-300 text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900 placeholder:text-gray-400 dark:placeholder:text-[#FDFFFC]/40 minimal:placeholder:text-gray-500 rounded-xl focus:border-[#FCA311] dark:focus:border-[#2EC4B6] minimal:focus:border-gray-400"
           />
         </div>
       </div>
@@ -26,9 +38,10 @@ export function TopBar({ darkMode, onToggleTheme }: TopBarProps) {
       <div className="flex items-center gap-3">
         <button
           onClick={onToggleTheme}
-          className="w-9 h-9 flex items-center justify-center text-gray-600 dark:text-[#FDFFFC]/60 hover:bg-gray-100 dark:hover:bg-[#2EC4B6]/10 dark:hover:text-[#2EC4B6] rounded-xl transition-colors"
+          className="w-9 h-9 flex items-center justify-center text-gray-600 dark:text-[#FDFFFC]/60 minimal:text-gray-700 hover:bg-gray-100 dark:hover:bg-[#2EC4B6]/10 minimal:hover:bg-gray-200 dark:hover:text-[#2EC4B6] minimal:hover:text-gray-900 rounded-xl transition-colors"
+          title={getThemeLabel()}
         >
-          {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          {getThemeIcon()}
         </button>
 
         <button

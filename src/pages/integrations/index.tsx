@@ -165,15 +165,15 @@ export default function IntegrationsPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] mb-2">Integrations</h1>
-          <p className="text-gray-500 dark:text-[#FDFFFC]/60">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900 mb-2">Integrations</h1>
+          <p className="text-gray-500 dark:text-[#FDFFFC]/60 minimal:text-gray-600">
             Connect your tools to create Golden Threads across your workflow
           </p>
         </div>
 
         {/* Tier 1: Core Integrations */}
         <div>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Core Integrations</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Core Integrations</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 1)
@@ -186,8 +186,8 @@ export default function IntegrationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800">
-                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800 minimal:bg-gray-100">
+                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary minimal:text-gray-900">
                               {integration.name[0]}
                             </span>
                           </div>
@@ -210,7 +210,7 @@ export default function IntegrationsPage() {
                     <CardContent>
                       <CardDescription className="mb-4">{integration.description}</CardDescription>
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-gray-400">Features:</p>
+                        <p className="text-xs font-medium text-gray-400 minimal:text-gray-600">Features:</p>
                         <div className="flex flex-wrap gap-2">
                           {integration.features.map((feature) => (
                             <Badge key={feature} variant="default" size="sm">
@@ -221,19 +221,19 @@ export default function IntegrationsPage() {
                       </div>
                       {connection && isConnected && (
                         <>
-                          <p className="mt-4 text-xs text-gray-500">
+                          <p className="mt-4 text-xs text-gray-500 minimal:text-gray-600">
                             Connected {formatRelativeTime(new Date(connection.connectedAt))}
                           </p>
                           {(() => {
                             const health = getHealthStatusForIntegration(integration.id);
                             return health && (
-                              <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 p-3">
+                              <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 minimal:border-gray-200 minimal:bg-gray-50 p-3">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-2">
                                     {getHealthIcon(health.healthStatus)}
                                     <div>
-                                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Health Status</p>
-                                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300 minimal:text-gray-900">Health Status</p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-500 minimal:text-gray-600">
                                         {health.lastSyncAt
                                           ? `Last sync ${formatRelativeTime(new Date(health.lastSyncAt))}`
                                           : 'No sync data'}
@@ -253,11 +253,11 @@ export default function IntegrationsPage() {
                             );
                           })()}
                           {integration.id === 'github' && webhookStatus && (
-                            <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 p-3">
+                            <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 minimal:border-gray-200 minimal:bg-gray-50 p-3">
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Automation Webhooks</p>
-                                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                                  <p className="text-xs font-medium text-gray-700 dark:text-gray-300 minimal:text-gray-900">Automation Webhooks</p>
+                                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-500 minimal:text-gray-600">
                                     {webhookStatus.configured
                                       ? `${webhookStatus.webhooks.length} organization${webhookStatus.webhooks.length !== 1 ? 's' : ''} configured`
                                       : 'Not configured'}
@@ -350,7 +350,7 @@ export default function IntegrationsPage() {
 
         {/* Tier 2: Design & Documentation */}
         <div>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Design & Documentation</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Design & Documentation</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 2)
@@ -363,8 +363,8 @@ export default function IntegrationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800">
-                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800 minimal:bg-gray-100">
+                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary minimal:text-gray-900">
                               {integration.name[0]}
                             </span>
                           </div>
@@ -387,7 +387,7 @@ export default function IntegrationsPage() {
                     <CardContent>
                       <CardDescription className="mb-4">{integration.description}</CardDescription>
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-gray-400">Features:</p>
+                        <p className="text-xs font-medium text-gray-400 minimal:text-gray-600">Features:</p>
                         <div className="flex flex-wrap gap-2">
                           {integration.features.map((feature) => (
                             <Badge key={feature} variant="default" size="sm">
@@ -436,7 +436,7 @@ export default function IntegrationsPage() {
 
         {/* Tier 3: Analytics & Research */}
         <div>
-          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC]">Analytics & Research</h2>
+          <h2 className="mb-6 text-2xl font-bold text-gray-900 dark:text-[#FDFFFC] minimal:text-gray-900">Analytics & Research</h2>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {integrations
               .filter((int) => int.tier === 3)
@@ -449,8 +449,8 @@ export default function IntegrationsPage() {
                     <CardHeader>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800">
-                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-800 minimal:bg-gray-100">
+                            <span className="text-xl font-bold text-[#FCA311] dark:text-primary minimal:text-gray-900">
                               {integration.name[0]}
                             </span>
                           </div>
@@ -473,7 +473,7 @@ export default function IntegrationsPage() {
                     <CardContent>
                       <CardDescription className="mb-4">{integration.description}</CardDescription>
                       <div className="space-y-2">
-                        <p className="text-xs font-medium text-gray-400">Features:</p>
+                        <p className="text-xs font-medium text-gray-400 minimal:text-gray-600">Features:</p>
                         <div className="flex flex-wrap gap-2">
                           {integration.features.map((feature) => (
                             <Badge key={feature} variant="default" size="sm">
