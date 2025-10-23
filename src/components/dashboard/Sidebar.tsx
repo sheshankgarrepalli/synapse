@@ -1,4 +1,4 @@
-import { Home, GitBranch, Users, FolderKanban, Plug, Settings, ChevronLeft } from "lucide-react";
+import { Home, GitBranch, Users, FolderKanban, Plug, Settings, ChevronLeft, Eye } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -14,6 +14,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const navItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard", active: router.pathname === "/dashboard" },
     { icon: GitBranch, label: "Threads", href: "/threads", active: router.pathname.startsWith("/threads") },
+    { icon: Eye, label: "Drift Watch", href: "/drift", active: router.pathname.startsWith("/drift") },
     { icon: Users, label: "Team", href: "/team", active: router.pathname === "/team" },
     { icon: FolderKanban, label: "Projects", href: "/projects", active: router.pathname === "/projects" },
     { icon: Plug, label: "Integrations", href: "/integrations", active: router.pathname === "/integrations" },
