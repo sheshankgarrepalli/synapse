@@ -22,10 +22,10 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Synapse - Enterprise Integration Platform</title>
+        <title>Synapse - Design-Code Drift Detection</title>
         <meta
           name="description"
-          content="Connect your design and development tools with Golden Threads"
+          content="Detect design-code drift between Figma and GitHub before shipping"
         />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -39,7 +39,7 @@ export default function Home() {
                   Synapse
                 </h1>
                 <p className="text-xl text-gray-400">
-                  Enterprise Integration Platform for Design & Product Teams
+                  Detect design-code drift between Figma and GitHub before shipping
                 </p>
               </div>
               <SignIn routing="hash" afterSignInUrl="/dashboard" />
@@ -51,7 +51,7 @@ export default function Home() {
               <div>
                 <h1 className="text-4xl font-bold text-white">Synapse</h1>
                 <p className="mt-2 text-gray-400">
-                  Your Golden Threads Dashboard
+                  Design-Code Drift Detection Dashboard
                 </p>
               </div>
               <UserButton afterSignOutUrl="/" />
@@ -82,7 +82,7 @@ export default function Home() {
                   Dashboard
                 </h3>
                 <p className="text-gray-400">
-                  View all your Golden Threads and recent activity
+                  View all drift watches and recent alerts
                 </p>
               </Link>
 
@@ -94,7 +94,7 @@ export default function Home() {
                   Threads
                 </h3>
                 <p className="text-gray-400">
-                  Manage Golden Threads across all your tools
+                  Manage drift watches across Figma and GitHub
                 </p>
               </Link>
 
