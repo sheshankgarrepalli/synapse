@@ -225,7 +225,7 @@ export class DriftDetectionService {
     await prisma.driftAlert.create({
       data: {
         watchId,
-        changes,
+        changes: changes as any,
         changeCount: changes.length,
         severity,
         acknowledged: false,
