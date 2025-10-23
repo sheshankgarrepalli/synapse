@@ -53,6 +53,7 @@ model Organization {
   codeSnapshots    CodeSnapshot[]
   designCodeDrifts DesignCodeDrift[]
   designCodeLinks  DesignCodeLink[]
+  driftWatches     DriftWatch[]
 
   @@index([slug])
   @@index([stripeCustomerId], map: "idx_organizations_stripe_customer")
@@ -100,6 +101,7 @@ model User {
   resolvedDrifts       DesignCodeDrift[]
   createdDesignCodeLinks DesignCodeLink[]
   digestLogs           DigestLog[]
+  driftWatches         DriftWatch[]
 
   @@index([organizationId], map: "idx_users_org")
   @@index([email], map: "idx_users_email")
@@ -501,7 +503,90 @@ model ApiKey {
 }
 
 // ==========================================
-// DESIGN-CODE DRIFT TRACKING
+// DESIGN-CODE DRIFT TRACKING (MVP)
+// ==========================================
+
+model DriftWatch {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+
+  // Figma Source
+  figmaFileId      String   @map("figma_file_id") @db.VarChar(500)
+  figmaFileName    String   @map("figma_file_name") @db.VarChar(500)
+  figmaComponentId String   @map("figma_component_id") @db.VarChar(500)
+  figmaComponentName String @map("figma_component_name") @db.VarChar(500)
+
+  // GitHub Source
+  githubRepoId     String   @map("github_repo_id") @db.VarChar(500)
+  githubRepoName   String   @map("github_repo_name") @db.VarChar(500)
+  githubFilePath   String   @map("github_file_path") @db.VarChar(1000)
+  githubBranch     String   @default("main") @map("github_branch") @db.VarChar(255)
+
+  // Snapshot of Figma Properties (colors, spacing, typography)
+  snapshot         Json     @default("{}")
+
+  // Watch Configuration
+  checkFrequency   String   @default("daily") @map("check_frequency") @db.VarChar(50) // "hourly", "daily", "weekly"
+  isActive         Boolean  @default(true) @map("is_active")
+
+  // Status
+  status           String   @default("healthy") @db.VarChar(50) // "healthy", "drift_detected", "error"
+  lastCheckedAt    DateTime? @map("last_checked_at") @db.Timestamptz(6)
+  lastHealthyAt    DateTime @default(now()) @map("last_healthy_at") @db.Timestamptz(6)
+
+  // Alert Settings
+  slackWebhookUrl  String?  @map("slack_webhook_url")
+  alertOnDrift     Boolean  @default(true) @map("alert_on_drift")
+
+  // Metadata
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user             User         @relation(fields: [userId], references: [id])
+  alerts           DriftAlert[]
+
+  @@index([organizationId], map: "idx_drift_watch_org")
+  @@index([userId], map: "idx_drift_watch_user")
+  @@index([status], map: "idx_drift_watch_status")
+  @@index([isActive], map: "idx_drift_watch_active")
+  @@map("drift_watches")
+}
+
+model DriftAlert {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  watchId      String   @map("watch_id") @db.Uuid
+
+  // Detected Changes
+  changes      Json     @default("[]") // [{property: "primaryColor", oldValue: "#0066FF", newValue: "#0052CC"}]
+  changeCount  Int      @default(0) @map("change_count")
+  severity     String   @default("medium") @db.VarChar(50) // "low", "medium", "high"
+
+  // Status
+  acknowledged Boolean  @default(false)
+  acknowledgedAt DateTime? @map("acknowledged_at") @db.Timestamptz(6)
+
+  // Alert Delivery
+  slackSent    Boolean  @default(false) @map("slack_sent")
+  slackSentAt  DateTime? @map("slack_sent_at") @db.Timestamptz(6)
+
+  // Metadata
+  detectedAt   DateTime @default(now()) @map("detected_at") @db.Timestamptz(6)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  watch        DriftWatch @relation(fields: [watchId], references: [id], onDelete: Cascade)
+
+  @@index([watchId], map: "idx_drift_alert_watch")
+  @@index([acknowledged], map: "idx_drift_alert_ack")
+  @@index([detectedAt(sort: Desc)], map: "idx_drift_alert_detected")
+  @@map("drift_alerts")
+}
+
+// ==========================================
+// DESIGN-CODE DRIFT TRACKING (LEGACY)
 // ==========================================
 
 model DesignSnapshot {

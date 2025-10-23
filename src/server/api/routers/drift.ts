@@ -9,6 +9,320 @@ import { logger } from '@/lib/logger';
 import { TRPCError } from '@trpc/server';
 
 export const driftRouter = createTRPCRouter({
+  // ==========================================
+  // MVP Drift Watch Endpoints
+  // ==========================================
+
+  /**
+   * Get all drift watches for the organization
+   */
+  getWatches: orgProcedure
+    .input(
+      z.object({
+        status: z.enum(['healthy', 'drift_detected', 'error']).optional(),
+        isActive: z.boolean().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: any = {
+        organizationId: ctx.session.organizationId,
+      };
+
+      if (input.status) {
+        where.status = input.status;
+      }
+
+      if (input.isActive !== undefined) {
+        where.isActive = input.isActive;
+      }
+
+      const [watches, total] = await Promise.all([
+        ctx.prisma.driftWatch.findMany({
+          where,
+          include: {
+            alerts: {
+              where: { acknowledged: false },
+              orderBy: { detectedAt: 'desc' },
+              take: 1,
+            },
+            _count: {
+              select: {
+                alerts: {
+                  where: { acknowledged: false },
+                },
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: input.limit,
+          skip: input.offset,
+        }),
+        ctx.prisma.driftWatch.count({ where }),
+      ]);
+
+      return {
+        watches,
+        total,
+        hasMore: total > input.offset + input.limit,
+      };
+    }),
+
+  /**
+   * Get watch by ID
+   */
+  getWatchById: orgProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const watch = await ctx.prisma.driftWatch.findUnique({
+      where: { id: input.id },
+      include: {
+        alerts: {
+          orderBy: { detectedAt: 'desc' },
+          take: 20,
+        },
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!watch || watch.organizationId !== ctx.session.organizationId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Watch not found',
+      });
+    }
+
+    return watch;
+  }),
+
+  /**
+   * Create a new drift watch
+   */
+  createWatch: orgProcedure
+    .input(
+      z.object({
+        figmaFileId: z.string(),
+        figmaFileName: z.string(),
+        figmaComponentId: z.string(),
+        figmaComponentName: z.string(),
+        githubRepoId: z.string(),
+        githubRepoName: z.string(),
+        githubFilePath: z.string(),
+        githubBranch: z.string().default('main'),
+        snapshot: z.record(z.any()).default({}),
+        checkFrequency: z.enum(['hourly', 'daily', 'weekly']).default('daily'),
+        slackWebhookUrl: z.string().optional(),
+        alertOnDrift: z.boolean().default(true),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const watch = await ctx.prisma.driftWatch.create({
+        data: {
+          organizationId: ctx.session.organizationId,
+          userId: ctx.session.userId,
+          figmaFileId: input.figmaFileId,
+          figmaFileName: input.figmaFileName,
+          figmaComponentId: input.figmaComponentId,
+          figmaComponentName: input.figmaComponentName,
+          githubRepoId: input.githubRepoId,
+          githubRepoName: input.githubRepoName,
+          githubFilePath: input.githubFilePath,
+          githubBranch: input.githubBranch,
+          snapshot: input.snapshot,
+          checkFrequency: input.checkFrequency,
+          slackWebhookUrl: input.slackWebhookUrl,
+          alertOnDrift: input.alertOnDrift,
+          status: 'healthy',
+          isActive: true,
+        },
+      });
+
+      logger.info('Drift watch created', {
+        watchId: watch.id,
+        figmaFile: input.figmaFileName,
+        githubRepo: input.githubRepoName,
+      });
+
+      return watch;
+    }),
+
+  /**
+   * Update a drift watch
+   */
+  updateWatch: orgProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        isActive: z.boolean().optional(),
+        checkFrequency: z.enum(['hourly', 'daily', 'weekly']).optional(),
+        slackWebhookUrl: z.string().optional(),
+        alertOnDrift: z.boolean().optional(),
+        githubBranch: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const watch = await ctx.prisma.driftWatch.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!watch || watch.organizationId !== ctx.session.organizationId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Watch not found',
+        });
+      }
+
+      const updated = await ctx.prisma.driftWatch.update({
+        where: { id: input.id },
+        data: {
+          isActive: input.isActive,
+          checkFrequency: input.checkFrequency,
+          slackWebhookUrl: input.slackWebhookUrl,
+          alertOnDrift: input.alertOnDrift,
+          githubBranch: input.githubBranch,
+        },
+      });
+
+      logger.info('Drift watch updated', {
+        watchId: input.id,
+        updates: input,
+      });
+
+      return updated;
+    }),
+
+  /**
+   * Delete a drift watch
+   */
+  deleteWatch: orgProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const watch = await ctx.prisma.driftWatch.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!watch || watch.organizationId !== ctx.session.organizationId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Watch not found',
+      });
+    }
+
+    await ctx.prisma.driftWatch.delete({
+      where: { id: input.id },
+    });
+
+    logger.info('Drift watch deleted', {
+      watchId: input.id,
+    });
+
+    return { success: true };
+  }),
+
+  /**
+   * Get alerts for a watch
+   */
+  getAlerts: orgProcedure
+    .input(
+      z.object({
+        watchId: z.string().optional(),
+        acknowledged: z.boolean().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const where: any = {};
+
+      if (input.watchId) {
+        where.watchId = input.watchId;
+      } else {
+        // Get all alerts for all watches belonging to this org
+        const watches = await ctx.prisma.driftWatch.findMany({
+          where: { organizationId: ctx.session.organizationId },
+          select: { id: true },
+        });
+        where.watchId = { in: watches.map((w) => w.id) };
+      }
+
+      if (input.acknowledged !== undefined) {
+        where.acknowledged = input.acknowledged;
+      }
+
+      const [alerts, total] = await Promise.all([
+        ctx.prisma.driftAlert.findMany({
+          where,
+          include: {
+            watch: {
+              select: {
+                id: true,
+                figmaFileName: true,
+                figmaComponentName: true,
+                githubRepoName: true,
+                githubFilePath: true,
+                status: true,
+              },
+            },
+          },
+          orderBy: {
+            detectedAt: 'desc',
+          },
+          take: input.limit,
+          skip: input.offset,
+        }),
+        ctx.prisma.driftAlert.count({ where }),
+      ]);
+
+      return {
+        alerts,
+        total,
+        hasMore: total > input.offset + input.limit,
+      };
+    }),
+
+  /**
+   * Acknowledge an alert
+   */
+  acknowledgeAlert: orgProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const alert = await ctx.prisma.driftAlert.findUnique({
+        where: { id: input.id },
+        include: { watch: true },
+      });
+
+      if (!alert || alert.watch.organizationId !== ctx.session.organizationId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Alert not found',
+        });
+      }
+
+      const updated = await ctx.prisma.driftAlert.update({
+        where: { id: input.id },
+        data: {
+          acknowledged: true,
+          acknowledgedAt: new Date(),
+        },
+      });
+
+      logger.info('Alert acknowledged', {
+        alertId: input.id,
+        userId: ctx.session.userId,
+      });
+
+      return updated;
+    }),
+
+  // ==========================================
+  // Legacy Drift Endpoints (DesignCodeDrift)
+  // ==========================================
+
   /**
    * Get all drift alerts for the organization
    */
